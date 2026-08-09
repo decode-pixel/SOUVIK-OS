@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Trash2, CheckCircle2, Circle, Clock, FolderKanban } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Circle, Clock, FolderKanban, ListTodo } from 'lucide-react';
 
 export default function Tasks() {
   const { user } = useAuth();
