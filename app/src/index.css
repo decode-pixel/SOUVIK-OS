@@ -593,11 +593,19 @@ p {
 
 .content {
   flex: 1;
-  padding: var(--space-6) var(--space-8);
+  width: 100%;
+  overflow-y: auto;
+}
+
+.header-container {
+  padding: var(--space-4) var(--space-8);
+}
+
+.page-container {
+  padding: var(--space-6) var(--space-8) var(--space-10) var(--space-8);
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
-  overflow-y: auto;
 }
 
 .nav-item {
@@ -640,13 +648,12 @@ p {
 .bottom-nav {
   display: none;
   position: fixed;
-  bottom: var(--space-4);
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
   left: var(--space-4);
   right: var(--space-4);
   height: 64px;
   border-radius: var(--radius-full);
   z-index: 50;
-  /* Safe area fallback handled by absolute padding if needed, but pill is floating */
 }
 .bottom-nav-inner {
   display: flex;
@@ -676,11 +683,14 @@ p {
   .sidebar {
     display: none;
   }
+  .header-container {
+    padding: var(--space-4) var(--space-4);
+  }
+  .page-container {
+    padding: var(--space-4) var(--space-4) calc(84px + env(safe-area-inset-bottom)) var(--space-4);
+  }
   .bottom-nav {
     display: block;
-  }
-  .content {
-    padding: var(--space-4) var(--space-4) calc(84px + env(safe-area-inset-bottom)) var(--space-4);
   }
 }
 

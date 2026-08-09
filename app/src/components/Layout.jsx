@@ -119,8 +119,8 @@ export default function Layout() {
       {/* Main Content Area */}
       <main className="content" style={{ padding: 0 }}>
         {/* Glass Header */}
-        <header className="glass" style={{
-          position: 'sticky', top: 0, zIndex: 30, padding: 'var(--space-4) var(--space-8)',
+        <header className="glass header-container" style={{
+          position: 'sticky', top: 0, zIndex: 30,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           borderBottom: '1px solid var(--glass-border)',
           borderLeft: 'none', borderRight: 'none', borderTop: 'none',
@@ -167,7 +167,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <div style={{ padding: 'var(--space-6) var(--space-8) var(--space-10) var(--space-8)' }}>
+        <div className="page-container">
           <Outlet />
         </div>
       </main>

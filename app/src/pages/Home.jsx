@@ -155,7 +155,7 @@ export default function Home() {
       {/* 2. Today's Snapshot (Premium Metric Composition) */}
       <div>
         <h3 style={{ fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: 'var(--space-3)' }}>Today's Pulse</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--space-4)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-4)' }}>
           
           <div className="card flex-col" style={{ padding: 'var(--space-4)' }}>
             <span className="text-muted text-sm flex-start"><Moon size={20} /> Sleep</span>
