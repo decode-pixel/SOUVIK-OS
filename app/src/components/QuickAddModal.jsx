@@ -130,7 +130,7 @@ export default function QuickAddModal({ onClose, onAdded }) {
                 {projects.length > 0 && (
                   <div className="form-group">
                     <label>Link to Project (Optional)</label>
-                    <select className="input" value={taskProjectId} onChange={e => setTaskProjectId(e.target.value)}>
+                    <select className="select" value={taskProjectId} onChange={e => setTaskProjectId(e.target.value)}>
                       <option value="">No Project</option>
                       {projects.map(p => (
                         <option key={p.id} value={p.id}>{p.name}</option>

@@ -48,12 +48,11 @@ export default function Tasks() {
         .eq('status', 'active');
       setProjects(projData || []);
 
-      // Load tasks for the selected date OR overdue tasks that are not done
+      // Load tasks safely
       const { data: taskData, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', user.id)
-        .or(`date.eq.${selectedDate},and(status.neq.done,date.lt.${selectedDate})`)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -72,7 +71,7 @@ export default function Tasks() {
         .from('settings')
         .select('module_toggles')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       const newToggles = { ...(settingsData?.module_toggles || {}), tasks: true };
       await supabase.from('settings').upsert({ user_id: user.id, module_toggles: newToggles }, { onConflict: 'user_id' });
@@ -146,12 +145,33 @@ export default function Tasks() {
   }
 
   if (loading) {
-    return <div style={{ padding: 'var(--space-6)' }}>Loading Tasks...</div>;
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', maxWidth: '900px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="skeleton" style={{ width: '160px', height: '36px' }} />
+          <div className="skeleton" style={{ width: '140px', height: '40px' }} />
+        </div>
+        <div className="skeleton card" style={{ height: '70px' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
+          {[1, 2, 3].map(i => (
+            <div key={i} className="skeleton card" style={{ height: '220px' }} />
+          ))}
+        </div>
+      </div>
+    );
   }
 
-  const todoTasks = tasks.filter(t => t.status === 'todo');
-  const inProgressTasks = tasks.filter(t => t.status === 'in_progress');
-  const doneTasks = tasks.filter(t => t.status === 'done');
+  // Filter tasks for the selected date OR overdue tasks that are not done
+  const filteredTasks = tasks.filter(t => {
+    if (!t.date) return selectedDate === todayStr;
+    if (t.date === selectedDate) return true;
+    if (t.status !== 'done' && t.date < selectedDate) return true;
+    return false;
+  });
+
+  const todoTasks = filteredTasks.filter(t => t.status === 'todo');
+  const inProgressTasks = filteredTasks.filter(t => t.status === 'in_progress');
+  const doneTasks = filteredTasks.filter(t => t.status === 'done');
 
   const TaskCard = ({ task }) => {
     const projName = projects.find(p => p.id === task.project_id)?.name;

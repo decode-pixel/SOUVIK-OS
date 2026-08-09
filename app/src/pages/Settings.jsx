@@ -42,7 +42,7 @@ export default function Settings() {
         .from('profiles')
         .select('theme_preference')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       
       if (profileData?.theme_preference) {
         setTheme(profileData.theme_preference);

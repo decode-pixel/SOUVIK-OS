@@ -91,7 +91,7 @@ export default function Finance() {
         .from('settings')
         .select('module_toggles')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       const newToggles = { ...(settingsData?.module_toggles || {}), finance: true };
       await supabase.from('settings').upsert({ user_id: user.id, module_toggles: newToggles }, { onConflict: 'user_id' });
@@ -280,7 +280,7 @@ export default function Finance() {
       </div>
 
       {/* Main Content Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-6)', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-6)', alignItems: 'start' }}>
         
         {/* Transaction List */}
         <div className="card" style={{ minHeight: '400px' }}>

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { supabase } from './supabaseClient';
 import Layout from './components/Layout';
+import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
 import Checkin from './pages/Checkin';
 import Profile from './pages/Profile';
@@ -18,7 +19,7 @@ import Auth from './pages/Auth';
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   
-  if (loading) return <div style={{ padding: 'var(--space-6)' }}>Loading Authentication...</div>;
+  if (loading) return <div style={{ padding: 'var(--space-6)', textAlign: 'center' }}>Loading Authentication...</div>;
   if (!user) return <Navigate to="/auth" />;
   
   return children;
@@ -29,7 +30,7 @@ function ThemeProvider({ children }) {
   
   useEffect(() => {
     if (user) {
-      supabase.from('profiles').select('theme_preference').eq('id', user.id).single()
+      supabase.from('profiles').select('theme_preference').eq('id', user.id).maybeSingle()
         .then(({ data }) => {
           if (data?.theme_preference) {
             document.documentElement.setAttribute('data-theme', data.theme_preference);
@@ -52,7 +53,7 @@ function NotificationEngine() {
 
     const checkAndNotify = async () => {
       try {
-        const { data: settings } = await supabase.from('settings').select('notification_prefs').eq('user_id', user.id).single();
+        const { data: settings } = await supabase.from('settings').select('notification_prefs').eq('user_id', user.id).maybeSingle();
         const prefs = settings?.notification_prefs || {};
         
         if (!prefs.checkin_reminder) return;
@@ -99,30 +100,31 @@ function NotificationEngine() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <NotificationEngine />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            
-            <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-              <Route index element={<Home />} />
-              <Route path="checkin" element={<Checkin />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="more" element={<More />} />
+    <ErrorBoundary>
+      <AuthProvider>
+        <ThemeProvider>
+          <NotificationEngine />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
               
-              {/* Placeholders for future steps */}
-              <Route path="health" element={<Health />} />
-              <Route path="finance" element={<Finance />} />
-              <Route path="tasks" element={<Tasks />} />
-              <Route path="projects" element={<Projects />} />
-              <Route path="goals" element={<Goals />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
-    </AuthProvider>
+              <Route path="/" element={<ProtectedRoute><ErrorBoundary><Layout /></ErrorBoundary></ProtectedRoute>}>
+                <Route index element={<Home />} />
+                <Route path="checkin" element={<Checkin />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="more" element={<More />} />
+                
+                <Route path="health" element={<Health />} />
+                <Route path="finance" element={<Finance />} />
+                <Route path="tasks" element={<Tasks />} />
+                <Route path="projects" element={<Projects />} />
+                <Route path="goals" element={<Goals />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </ThemeProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

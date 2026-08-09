@@ -133,7 +133,7 @@ export default function Health() {
         .from('settings')
         .select('module_toggles')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       const newToggles = { ...(settingsData?.module_toggles || {}), health: true };
       await supabase
@@ -338,7 +338,7 @@ export default function Health() {
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${timeRange === 7 ? 7 : 10}, 1fr)`, gap: 'var(--space-2)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(56px, 1fr))`, gap: 'var(--space-2)' }}>
           {dateList.map((dt) => {
             const checkin = checkins.find(c => c.date === dt);
             const isExercised = checkin?.exercise;

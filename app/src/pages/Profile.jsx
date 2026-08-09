@@ -32,7 +32,7 @@ export default function Profile() {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error && status !== 406) {
         throw error;

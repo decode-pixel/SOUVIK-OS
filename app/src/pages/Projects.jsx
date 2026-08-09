@@ -62,7 +62,7 @@ export default function Projects() {
         .from('settings')
         .select('module_toggles')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       const newToggles = { ...(settingsData?.module_toggles || {}), projects: true };
       await supabase.from('settings').upsert({ user_id: user.id, module_toggles: newToggles }, { onConflict: 'user_id' });
