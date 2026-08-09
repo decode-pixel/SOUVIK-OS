@@ -1,8 +1,19 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Home, CheckSquare, HeartPulse, DollarSign, ListTodo, FolderKanban, Target, Settings, User, LogOut, Menu, Sun, Moon } from 'lucide-react';
+import { Home, CheckSquare, HeartPulse, DollarSign, ListTodo, FolderKanban, Target, Settings, User, LogOut, Sun, Moon, MoreHorizontal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
+
+// Module accent colors for nav icons
+const MODULE_COLORS = {
+  '/': { bg: 'var(--accent-primary-muted)', color: 'var(--accent-primary)', darkBg: 'var(--accent-primary-subtle)' },
+  '/checkin': { bg: '#ffe4e9', color: '#e11d48', darkBg: '#3a0a15' },
+  '/finance': { bg: 'var(--mod-finance-muted)', color: 'var(--mod-finance)', darkBg: 'var(--mod-finance-muted)' },
+  '/tasks': { bg: 'var(--mod-tasks-muted)', color: 'var(--mod-tasks)', darkBg: 'var(--mod-tasks-muted)' },
+  '/projects': { bg: 'var(--mod-projects-muted)', color: 'var(--mod-projects)', darkBg: 'var(--mod-projects-muted)' },
+  '/goals': { bg: 'var(--mod-goals-muted)', color: 'var(--mod-goals)', darkBg: 'var(--mod-goals-muted)' },
+  '/health': { bg: 'var(--mod-health-muted)', color: 'var(--mod-health)', darkBg: 'var(--mod-health-muted)' },
+};
 
 export default function Layout() {
   const { signOut, user } = useAuth();
@@ -13,7 +24,6 @@ export default function Layout() {
   React.useEffect(() => {
     const current = document.documentElement.getAttribute('data-theme') || 'light';
     setTheme(current);
-    
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.attributeName === 'data-theme') {
@@ -40,7 +50,7 @@ export default function Layout() {
   };
 
   const desktopNavItems = [
-    { to: '/', icon: Home, label: 'Home' },
+    { to: '/', icon: Home, label: 'Home', exact: true },
     { to: '/checkin', icon: CheckSquare, label: 'Check-in' },
     { to: '/finance', icon: DollarSign, label: 'Finance' },
     { to: '/tasks', icon: ListTodo, label: 'Tasks' },
@@ -54,144 +64,209 @@ export default function Layout() {
     { to: '/checkin', icon: CheckSquare, label: 'Check-in' },
     { to: '/finance', icon: DollarSign, label: 'Finance' },
     { to: '/tasks', icon: ListTodo, label: 'Tasks' },
-    { to: '/more', icon: Menu, label: 'More' }
+    { to: '/more', icon: MoreHorizontal, label: 'More' },
   ];
 
-  // Get first letter of email for avatar
   const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'S';
 
-  // Map path to title
   const getPageTitle = () => {
     const path = location.pathname.split('/')[1];
     if (!path) return 'Dashboard';
+    if (path === 'checkin') return 'Check-in';
     return path.charAt(0).toUpperCase() + path.slice(1);
+  };
+
+  const isActive = (to) => {
+    if (to === '/') return location.pathname === '/';
+    return location.pathname.startsWith(to);
   };
 
   return (
     <div className="layout">
       {/* Desktop Sidebar */}
       <aside className="sidebar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-2) var(--space-4)', marginBottom: 'var(--space-6)' }}>
-          <div style={{ 
-            width: '32px', height: '32px', borderRadius: 'var(--radius-md)', 
-            backgroundColor: 'var(--accent-primary)', color: 'var(--text-inverse)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
-          }}>
-            {userInitial}
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-2) var(--space-3)', marginBottom: 'var(--space-6)' }}>
+          <div style={{
+            width: '34px', height: '34px', borderRadius: 'var(--radius-md)',
+            background: 'linear-gradient(135deg, var(--accent-primary) 0%, #9180f5 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontWeight: 800, fontSize: '16px', flexShrink: 0,
+            boxShadow: '0 2px 8px var(--accent-glow)',
+          }}>S</div>
+          <div>
+            <div style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 700, fontSize: 'var(--font-size-lg)',
+              letterSpacing: '-0.03em', color: 'var(--text-primary)',
+              lineHeight: 1
+            }}>Souvik OS</div>
           </div>
-          <h2 style={{ margin: 0, fontSize: '1.25rem', letterSpacing: '-0.03em' }}>Souvik OS</h2>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-          <div style={{ padding: '0 var(--space-4)', marginBottom: 'var(--space-2)' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Modules</span>
+        {/* Modules nav */}
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1 }}>
+          <div style={{ padding: '0 var(--space-3)', marginBottom: 'var(--space-2)' }}>
+            <span className="label-caps">Modules</span>
           </div>
-          
-          {desktopNavItems.map(item => (
-            <NavLink 
-              key={item.to} 
-              to={item.to} 
-              className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}
-            >
-              <item.icon size={20} strokeWidth={2} />
-              {item.label}
-            </NavLink>
-          ))}
+
+          {desktopNavItems.map(item => {
+            const active = isActive(item.to);
+            const colors = MODULE_COLORS[item.to] || {};
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
+                className={`nav-item ${active ? 'active' : ''}`}
+                style={{ gap: 'var(--space-3)' }}
+              >
+                <div style={{
+                  width: '28px', height: '28px',
+                  borderRadius: 'var(--radius-sm)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: active ? colors.color || 'var(--accent-primary)' : 'transparent',
+                  color: active ? '#fff' : (colors.color || 'var(--text-muted)'),
+                  transition: 'all var(--transition-fast)',
+                  flexShrink: 0,
+                  ...(active && { boxShadow: `0 2px 6px ${colors.color || 'var(--accent-glow)'}33` })
+                }}>
+                  <item.icon size={16} strokeWidth={active ? 2.5 : 2} />
+                </div>
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
-        
-        <div style={{ marginTop: 'auto', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <NavLink to="/profile" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
-            <User size={20} strokeWidth={2} /> Profile
+
+        {/* Bottom actions */}
+        <div style={{ marginTop: 'auto', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <div style={{ width: '28px', height: '28px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+              <User size={16} strokeWidth={2} />
+            </div>
+            Profile
           </NavLink>
-          <NavLink to="/settings" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
-            <Settings size={20} strokeWidth={2} /> Settings
+          <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <div style={{ width: '28px', height: '28px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+              <Settings size={16} strokeWidth={2} />
+            </div>
+            Settings
           </NavLink>
-          <button 
-            onClick={handleLogout} 
-            className="nav-item" 
-            style={{ border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', width: '100%', fontFamily: 'inherit', fontSize: '1rem', marginTop: 'var(--space-2)' }}
+          <button
+            onClick={handleLogout}
+            className="nav-item"
+            style={{ border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', width: '100%', fontFamily: 'inherit', fontSize: 'var(--font-size-sm)' }}
           >
-            <LogOut size={20} strokeWidth={2} color="var(--text-secondary)" /> <span style={{ color: 'var(--text-secondary)' }}>Sign Out</span>
+            <div style={{ width: '28px', height: '28px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+              <LogOut size={16} strokeWidth={2} />
+            </div>
+            <span style={{ color: 'var(--text-secondary)' }}>Sign Out</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <main className="content" style={{ padding: 0 }}>
         {/* Glass Header */}
-        <header className="glass header-container" style={{
-          position: 'sticky', top: 0, zIndex: 30,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          borderBottom: '1px solid var(--glass-border)',
-          borderLeft: 'none', borderRight: 'none', borderTop: 'none',
-          boxShadow: '0 1px 2px 0 rgba(0,0,0,0.02)'
-        }}>
+        <header
+          className="glass header-container"
+          style={{
+            position: 'sticky', top: 0, zIndex: 30,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            borderBottom: '1px solid var(--glass-border-outer)',
+            borderLeft: 'none', borderRight: 'none', borderTop: 'none',
+          }}
+        >
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.25rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <h1 style={{
+              margin: 0,
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: 'var(--font-size-xl)',
+              fontWeight: 700,
+              letterSpacing: '-0.025em',
+              color: 'var(--text-primary)'
+            }}>
               {getPageTitle()}
             </h1>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <button 
-              className="btn-icon" 
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            {/* Theme Toggle */}
+            <button
+              className="btn-icon"
               onClick={toggleTheme}
-              style={{ position: 'relative', overflow: 'hidden' }}
               aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              style={{ position: 'relative', overflow: 'hidden', width: '36px', height: '36px' }}
             >
               <div style={{
-                position: 'absolute',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'transform var(--duration-emphasis) var(--ease-spring), opacity var(--duration-standard)',
-                transform: theme === 'dark' ? 'translateY(0) rotate(0)' : 'translateY(30px) rotate(-90deg)',
-                opacity: theme === 'dark' ? 1 : 0
+                position: 'absolute', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'transform var(--dur-emphasis) var(--ease-spring), opacity var(--dur-normal) var(--ease-standard)',
+                transform: theme === 'dark' ? 'translateY(0) rotate(0deg)' : 'translateY(32px) rotate(-90deg)',
+                opacity: theme === 'dark' ? 1 : 0,
+                color: '#f59e0b'
               }}>
-                <Sun size={20} />
+                <Sun size={18} />
               </div>
               <div style={{
-                position: 'absolute',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'transform var(--duration-emphasis) var(--ease-spring), opacity var(--duration-standard)',
-                transform: theme === 'light' ? 'translateY(0) rotate(0)' : 'translateY(-30px) rotate(90deg)',
-                opacity: theme === 'light' ? 1 : 0
+                position: 'absolute', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'transform var(--dur-emphasis) var(--ease-spring), opacity var(--dur-normal) var(--ease-standard)',
+                transform: theme === 'light' ? 'translateY(0) rotate(0deg)' : 'translateY(-32px) rotate(90deg)',
+                opacity: theme === 'light' ? 1 : 0,
+                color: 'var(--text-muted)'
               }}>
-                <Moon size={20} />
+                <Moon size={18} />
               </div>
             </button>
-            <div style={{ 
-              width: '40px', height: '40px', borderRadius: 'var(--radius-full)', 
-              backgroundColor: 'var(--accent-primary-muted)', color: 'var(--accent-primary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
+
+            {/* Avatar */}
+            <div style={{
+              width: '34px', height: '34px',
+              borderRadius: 'var(--radius-full)',
+              background: 'linear-gradient(135deg, var(--accent-primary) 0%, #9180f5 100%)',
+              color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 700, fontSize: '14px',
+              boxShadow: '0 0 0 2px var(--bg-surface), 0 0 0 3px var(--accent-primary-muted)',
+              transition: 'box-shadow var(--transition-fast)',
             }}>
               {userInitial}
             </div>
           </div>
         </header>
 
-        <div className="page-container">
+        <div className="page-container" style={{ animation: 'page-enter var(--dur-normal) var(--ease-decel)' }}>
           <Outlet />
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation (5 slots) */}
-      <nav className="bottom-nav glass">
+      {/* Mobile Bottom Navigation */}
+      <nav className="bottom-nav">
         <div className="bottom-nav-inner">
-          {mobileNavItems.map(item => (
-            <NavLink 
-              key={item.to} 
-              to={item.to} 
-              className={({isActive}) => `bottom-nav-item ${isActive ? 'active' : ''}`}
-            >
-              <div style={{ 
-                padding: '4px 16px', 
-                borderRadius: 'var(--radius-full)', 
-                backgroundColor: location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to)) ? 'var(--accent-primary-subtle)' : 'transparent',
-                transition: 'background-color var(--transition-fast)'
-              }}>
-                <item.icon size={24} strokeWidth={2} />
-              </div>
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+          {mobileNavItems.map(item => {
+            const active = isActive(item.to);
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
+                className={`bottom-nav-item ${active ? 'active' : ''}`}
+              >
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '40px', height: '32px',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: active ? 'var(--accent-primary-muted)' : 'transparent',
+                  transition: 'background-color var(--transition-fast)',
+                }}>
+                  <item.icon size={22} strokeWidth={active ? 2.5 : 2} />
+                </div>
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
         </div>
       </nav>
     </div>

@@ -2,8 +2,105 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Clock, Moon, Activity, Sparkles, Plus, Wallet, Target, ListTodo, FolderKanban, Circle, ArrowUpRight } from 'lucide-react';
+import { CheckCircle2, Clock, Moon, Activity, Sparkles, Plus, Wallet, Target, ListTodo, FolderKanban, Circle, ArrowUpRight, TrendingUp } from 'lucide-react';
 import QuickAddModal from '../components/QuickAddModal';
+
+function MetricCard({ icon: Icon, label, value, subLabel, color, muted, onClick, tint }) {
+  return (
+    <div
+      className="card"
+      onClick={onClick}
+      style={{
+        padding: 'var(--space-4)',
+        cursor: onClick ? 'pointer' : 'default',
+        position: 'relative',
+        overflow: 'hidden',
+        transition: 'all var(--transition-normal)',
+        '--tint': tint || 'transparent',
+      }}
+      onMouseEnter={e => onClick && (e.currentTarget.style.transform = 'translateY(-2px)')}
+      onMouseLeave={e => onClick && (e.currentTarget.style.transform = 'translateY(0)')}
+    >
+      {/* Background tint */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: `radial-gradient(ellipse at top right, ${tint || 'transparent'} 0%, transparent 65%)`,
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{ position: 'relative' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
+          marginBottom: 'var(--space-3)'
+        }}>
+          <div style={{
+            width: '28px', height: '28px', borderRadius: 'var(--radius-sm)',
+            backgroundColor: muted, color: color,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon size={14} strokeWidth={2.5} />
+          </div>
+          <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {label}
+          </span>
+        </div>
+
+        <div style={{
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontSize: 'var(--font-size-2xl)', fontWeight: 700,
+          color: color || 'var(--text-primary)',
+          letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 'var(--space-1)'
+        }}>
+          {value}
+        </div>
+        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', fontWeight: 500 }}>
+          {subLabel}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionPanel({ icon: Icon, title, color, items, emptyText, navigateTo, onNavigate, renderItem }) {
+  return (
+    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="flex-between" style={{
+        padding: 'var(--space-4) var(--space-5)',
+        borderBottom: '1px solid var(--border-subtle)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <div style={{
+            width: '28px', height: '28px', borderRadius: 'var(--radius-sm)',
+            backgroundColor: 'transparent',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: color,
+          }}>
+            <Icon size={16} strokeWidth={2.5} />
+          </div>
+          <h3 style={{ margin: 0, fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>
+            {title}
+          </h3>
+        </div>
+        <button
+          className="btn-icon"
+          onClick={onNavigate}
+          aria-label={`Open ${title}`}
+          style={{ width: '28px', height: '28px', borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)' }}
+        >
+          <ArrowUpRight size={14} />
+        </button>
+      </div>
+
+      <div style={{ padding: 'var(--space-2)' }}>
+        {items.length > 0 ? items.map((item, i) => renderItem(item, i)) : (
+          <div style={{ padding: 'var(--space-6)', textAlign: 'center' }}>
+            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)' }}>{emptyText}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const { user } = useAuth();
@@ -27,7 +124,6 @@ export default function Home() {
   async function fetchTodayData() {
     try {
       setLoading(true);
-
       const [
         { data: checkinData },
         { data: habitsData },
@@ -39,7 +135,7 @@ export default function Home() {
         supabase.from('daily_checkins').select('*').eq('user_id', user.id).eq('date', todayStr).maybeSingle(),
         supabase.from('habits').select('*').eq('user_id', user.id).eq('enabled', true),
         supabase.from('habit_logs').select('*').eq('user_id', user.id).eq('date', todayStr),
-        supabase.from('tasks').select('*').eq('user_id', user.id).neq('status', 'done').order('created_at', { ascending: false }).limit(3),
+        supabase.from('tasks').select('*').eq('user_id', user.id).neq('status', 'done').order('created_at', { ascending: false }).limit(4),
         supabase.from('projects').select('*').eq('user_id', user.id).eq('status', 'active').order('updated_at', { ascending: false }),
         supabase.from('goals').select('*').eq('user_id', user.id).eq('status', 'active').order('updated_at', { ascending: false }).limit(3)
       ]);
@@ -54,10 +150,8 @@ export default function Home() {
       const currentDate = new Date();
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0];
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
-      
       const { data: txData } = await supabase.from('transactions').select('amount').eq('user_id', user.id).eq('type', 'expense').gte('date', startOfMonth).lte('date', endOfMonth);
       setMonthExpense((txData || []).reduce((acc, t) => acc + Number(t.amount), 0));
-
     } catch (err) {
       console.error('Error fetching home data:', err);
     } finally {
@@ -75,218 +169,219 @@ export default function Home() {
   const totalGoodHabits = habits.filter(h => h.category === 'good_habit').length;
 
   const currentHour = new Date().getHours();
-  const greeting = currentHour < 12 ? 'Good morning' : currentHour < 18 ? 'Good afternoon' : 'Good evening';
+  const greeting = currentHour < 12 ? 'Good morning' : currentHour < 17 ? 'Good afternoon' : 'Good evening';
   const displayDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-
-  // Fallback for user name
   const userName = user?.user_metadata?.preferred_name || user?.user_metadata?.name || user?.user_metadata?.first_name || 'Souvik';
 
   if (loading) {
     return (
       <div className="flex-col" style={{ gap: 'var(--space-6)' }}>
         <div>
-          <div className="skeleton" style={{ width: '200px', height: '32px', marginBottom: '8px' }} />
-          <div className="skeleton" style={{ width: '150px', height: '20px' }} />
+          <div className="skeleton" style={{ width: '260px', height: '38px', marginBottom: '8px' }} />
+          <div className="skeleton" style={{ width: '180px', height: '18px' }} />
         </div>
-        <div className="skeleton card" style={{ height: '120px' }} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-4)' }}>
-          {[1, 2, 3].map(i => <div key={i} className="skeleton card" style={{ height: '100px' }} />)}
+        <div className="skeleton card" style={{ height: '96px' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--space-4)' }}>
+          {[1, 2, 3, 4].map(i => <div key={i} className="skeleton card" style={{ height: '110px' }} />)}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-5)' }}>
+          {[1, 2, 3].map(i => <div key={i} className="skeleton card" style={{ height: '220px' }} />)}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-col" style={{ gap: 'var(--space-8)', position: 'relative' }}>
-      
-      {/* Header Area */}
-      <div className="flex-between">
+    <div className="flex-col" style={{ gap: 'var(--space-8)', animation: 'page-enter var(--dur-normal) var(--ease-decel)' }}>
+
+      {/* Greeting */}
+      <div className="flex-between" style={{ flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         <div>
-          <h1 style={{ letterSpacing: '-0.03em', margin: 0 }}>{greeting}, {userName}.</h1>
-          <p className="text-muted" style={{ margin: 0 }}>{displayDate}</p>
+          <h1 style={{ margin: 0, lineHeight: 1.1, fontSize: 'clamp(1.5rem, 4vw, 2rem)' }}>
+            {greeting}, {userName}.
+          </h1>
+          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>
+            {displayDate}
+          </p>
         </div>
-        
-        {/* Desktop Quick Add (Visible >= 768px handled by CSS natively or via React rendering - here we'll just show it always but style it appropriately) */}
-        <button className="btn btn-primary" style={{ display: 'none' /* Will use FAB for all for now, or just show here */ }} onClick={() => setShowQuickAdd(true)}>
-          <Plus size={18} /> Quick Add
+        <button
+          className="btn btn-primary"
+          onClick={() => setShowQuickAdd(true)}
+          style={{ gap: 'var(--space-2)' }}
+        >
+          <Plus size={16} />
+          Quick Add
         </button>
       </div>
 
-      {/* 1. Daily Check-in Hero */}
-      <div 
-        className="card card-interactive" 
+      {/* Daily Check-in Hero */}
+      <div
+        className="card card-interactive"
         onClick={() => navigate('/checkin')}
-        style={{ 
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+        style={{
           padding: 'var(--space-5) var(--space-6)',
-          borderColor: isCheckinDone ? 'var(--border-subtle)' : 'var(--accent-primary)'
+          background: isCheckinDone
+            ? 'var(--bg-surface)'
+            : `linear-gradient(135deg, var(--accent-primary-subtle) 0%, var(--bg-surface) 100%)`,
+          borderColor: isCheckinDone ? 'var(--border-subtle)' : 'var(--accent-primary)',
+          borderWidth: isCheckinDone ? '1px' : '1.5px',
         }}
       >
-        <div className="flex-start" style={{ gap: 'var(--space-4)' }}>
-          <div style={{ 
-            width: '48px', height: '48px', borderRadius: 'var(--radius-full)', 
-            backgroundColor: isCheckinDone ? 'var(--mod-finance-muted)' : 'var(--accent-primary-subtle)', 
-            color: isCheckinDone ? 'var(--color-success)' : 'var(--accent-primary)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center' 
-          }}>
-            {isCheckinDone ? <CheckCircle2 size={24} /> : <Clock size={24} />}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+            <div style={{
+              width: '48px', height: '48px', borderRadius: 'var(--radius-full)',
+              backgroundColor: isCheckinDone ? 'var(--color-success-muted)' : 'var(--accent-primary-muted)',
+              color: isCheckinDone ? 'var(--color-success)' : 'var(--accent-primary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              {isCheckinDone ? <CheckCircle2 size={22} strokeWidth={2.5} /> : <Clock size={22} strokeWidth={2} />}
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 'var(--font-size-md)', color: 'var(--text-primary)' }}>
+                {isCheckinDone ? "Today's check-in complete" : "Daily check-in pending"}
+              </div>
+              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                {isCheckinDone
+                  ? `Logged at ${new Date(todayCheckin.completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                  : "Take 60 seconds to log today's metrics."}
+              </div>
+            </div>
           </div>
-          <div>
-            <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary)' }}>
-              {isCheckinDone ? "Today's check-in complete" : "Daily check-in pending"}
-            </h2>
-            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              {isCheckinDone 
-                ? `Logged at ${new Date(todayCheckin.completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` 
-                : "Take 60 seconds to log today's metrics."}
-            </p>
-          </div>
+          {!isCheckinDone && (
+            <div className="btn btn-primary" style={{ pointerEvents: 'none', padding: '0 var(--space-4)', minHeight: '36px', fontSize: 'var(--font-size-sm)' }}>
+              Start →
+            </div>
+          )}
         </div>
-        
-        {!isCheckinDone && (
-          <div className="btn btn-primary" style={{ pointerEvents: 'none' }}>
-            Start
-          </div>
-        )}
       </div>
 
-      {/* 2. Today's Snapshot (Premium Metric Composition) */}
+      {/* Metric Cards */}
       <div>
-        <h3 style={{ fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: 'var(--space-3)' }}>Today's Pulse</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-4)' }}>
-          
-          <div className="card flex-col" style={{ padding: 'var(--space-4)' }}>
-            <span className="text-muted text-sm flex-start"><Moon size={20} /> Sleep</span>
-            <div style={{ fontSize: '2rem', fontWeight: 700, margin: 'var(--space-1) 0', color: 'var(--text-primary)' }}>
-              {todayCheckin ? `${todayCheckin.sleep_hours}h` : '—'}
-            </div>
-            <span className="text-xs" style={{ color: todayCheckin && Number(todayCheckin.sleep_hours) >= 7 ? 'var(--color-success)' : 'var(--text-secondary)' }}>
-              {todayCheckin ? (Number(todayCheckin.sleep_hours) >= 7 ? 'Optimal rest' : 'Under target') : 'Awaiting check-in'}
-            </span>
-          </div>
-
-          <div className="card flex-col" style={{ padding: 'var(--space-4)' }}>
-            <span className="text-muted text-sm flex-start"><Activity size={20} /> Exercise</span>
-            <div style={{ fontSize: '2rem', fontWeight: 700, margin: 'var(--space-1) 0', color: 'var(--text-primary)' }}>
-              {todayCheckin ? (todayCheckin.exercise ? 'Yes' : 'No') : '—'}
-            </div>
-            <span className="text-xs text-secondary">
-              {todayCheckin ? (todayCheckin.exercise ? 'Active day' : 'Rest day') : 'Awaiting check-in'}
-            </span>
-          </div>
-
-          <div className="card flex-col" style={{ padding: 'var(--space-4)' }}>
-            <span className="text-muted text-sm flex-start"><Sparkles size={20} /> Habits</span>
-            <div style={{ fontSize: '2rem', fontWeight: 700, margin: 'var(--space-1) 0', color: 'var(--text-primary)' }}>
-              {isCheckinDone ? `${completedGoodHabitsCount}/${totalGoodHabits}` : '—'}
-            </div>
-            <span className="text-xs text-secondary">
-              {isCheckinDone ? 'Good habits logged' : 'Awaiting check-in'}
-            </span>
-          </div>
-
-          <div className="card flex-col" style={{ padding: 'var(--space-4)', cursor: 'pointer' }} onClick={() => navigate('/finance')}>
-            <span className="text-muted text-sm flex-start"><Wallet size={20} /> Spent Today</span>
-            <div style={{ fontSize: '2rem', fontWeight: 700, margin: 'var(--space-1) 0', color: 'var(--mod-finance)' }}>
-              {/* Not actually fetching 'today's spend' directly in the query above right now, just monthly, so we fallback to month for now or calculate today */}
-              {/* Using monthExpense here as a placeholder for today's spend visually, ideally we query just today's. Let's just say 'This Month' for accuracy */}
-              ₹{monthExpense.toLocaleString('en-IN')}
-            </div>
-            <span className="text-xs text-secondary">This month so far</span>
-          </div>
-
+        <p className="label-caps" style={{ marginBottom: 'var(--space-3)' }}>Today's Pulse</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--space-4)' }}>
+          <MetricCard
+            icon={Moon}
+            label="Sleep"
+            value={todayCheckin ? `${todayCheckin.sleep_hours}h` : '—'}
+            subLabel={todayCheckin ? (Number(todayCheckin.sleep_hours) >= 7 ? '✓ Optimal rest' : '↓ Under target') : 'Awaiting check-in'}
+            color="var(--accent-primary)"
+            muted="var(--accent-primary-muted)"
+            tint="rgba(91,76,220,0.07)"
+          />
+          <MetricCard
+            icon={Activity}
+            label="Exercise"
+            value={todayCheckin ? (todayCheckin.exercise ? 'Yes' : 'No') : '—'}
+            subLabel={todayCheckin ? (todayCheckin.exercise ? 'Active day' : 'Rest day') : 'Awaiting check-in'}
+            color="var(--mod-health)"
+            muted="var(--mod-health-muted)"
+            tint="var(--mod-health-glow)"
+          />
+          <MetricCard
+            icon={Sparkles}
+            label="Habits"
+            value={isCheckinDone ? `${completedGoodHabitsCount}/${totalGoodHabits}` : '—'}
+            subLabel={isCheckinDone ? 'Good habits logged' : 'Awaiting check-in'}
+            color="var(--mod-goals)"
+            muted="var(--mod-goals-muted)"
+            tint="var(--mod-goals-glow)"
+          />
+          <MetricCard
+            icon={Wallet}
+            label="Spent"
+            value={`₹${monthExpense.toLocaleString('en-IN')}`}
+            subLabel="This month so far"
+            color="var(--mod-finance)"
+            muted="var(--mod-finance-muted)"
+            tint="var(--mod-finance-glow)"
+            onClick={() => navigate('/finance')}
+          />
         </div>
       </div>
 
-      {/* 3. Dashboard Integration (Tasks, Projects, Goals) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-6)', alignItems: 'start' }}>
-        
-        {/* Top Tasks */}
-        <div className="card flex-col" style={{ padding: '0', overflow: 'hidden' }}>
-          <div className="flex-between" style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-surface-elevated)' }}>
-            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <ListTodo size={18} color="var(--mod-tasks)" /> Today's Focus
-            </h3>
-            <button className="btn-icon" onClick={() => navigate('/tasks')}><ArrowUpRight size={18} /></button>
-          </div>
-          <div style={{ padding: 'var(--space-2)' }}>
-            {pendingTasks.length > 0 ? pendingTasks.map(task => (
-              <div key={task.id} style={{ padding: 'var(--space-3) var(--space-4)', display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start', borderBottom: '1px solid var(--border-subtle)' }}>
-                <Circle size={18} color="var(--text-secondary)" style={{ marginTop: '2px' }} />
-                <span style={{ fontSize: '0.9375rem' }}>{task.title}</span>
-              </div>
-            )) : (
-              <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--text-muted)' }}>No pending tasks</div>
-            )}
-          </div>
-        </div>
+      {/* Dashboard panels */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: 'var(--space-5)', alignItems: 'start' }}>
 
-        {/* Active Projects */}
-        <div className="card flex-col" style={{ padding: '0', overflow: 'hidden' }}>
-          <div className="flex-between" style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-surface-elevated)' }}>
-            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <FolderKanban size={18} color="var(--mod-projects)" /> Active Projects
-            </h3>
-            <button className="btn-icon" onClick={() => navigate('/projects')}><ArrowUpRight size={18} /></button>
-          </div>
-          <div style={{ padding: 'var(--space-2)' }}>
-            {activeProjects.length > 0 ? activeProjects.map(proj => (
-              <div key={proj.id} style={{ padding: 'var(--space-3) var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', borderBottom: '1px solid var(--border-subtle)' }}>
-                <div className="flex-between">
-                  <span style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{proj.name}</span>
-                  <span className="text-xs text-muted">{proj.progress_pct}%</span>
-                </div>
-                <div className="progress-track" style={{ height: '4px' }}>
-                  <div className="progress-fill" style={{ width: `${proj.progress_pct}%`, backgroundColor: 'var(--mod-projects)' }} />
-                </div>
-              </div>
-            )) : (
-              <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--text-muted)' }}>No active projects</div>
-            )}
-          </div>
-        </div>
+        <SectionPanel
+          icon={ListTodo}
+          title="Today's Focus"
+          color="var(--mod-tasks)"
+          items={pendingTasks}
+          emptyText="No pending tasks — clear deck! 🎉"
+          onNavigate={() => navigate('/tasks')}
+          renderItem={(task, i) => (
+            <div key={task.id} style={{
+              padding: 'var(--space-3) var(--space-4)',
+              display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
+              borderBottom: i < pendingTasks.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+              borderRadius: 'var(--radius-sm)',
+              transition: 'background-color var(--transition-fast)',
+            }}>
+              <Circle size={14} color="var(--text-muted)" strokeWidth={2} style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)', fontWeight: 500, lineHeight: 1.4 }}>
+                {task.title}
+              </span>
+            </div>
+          )}
+        />
 
-        {/* Active Goals */}
-        <div className="card flex-col" style={{ padding: '0', overflow: 'hidden' }}>
-          <div className="flex-between" style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-surface-elevated)' }}>
-            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <Target size={18} color="var(--mod-goals)" /> Top Goals
-            </h3>
-            <button className="btn-icon" onClick={() => navigate('/goals')}><ArrowUpRight size={18} /></button>
-          </div>
-          <div style={{ padding: 'var(--space-2)' }}>
-            {activeGoals.length > 0 ? activeGoals.map(goal => (
-              <div key={goal.id} style={{ padding: 'var(--space-3) var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', borderBottom: '1px solid var(--border-subtle)' }}>
-                <div className="flex-between">
-                  <span style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{goal.name}</span>
-                  <span className="badge" style={{ backgroundColor: 'var(--mod-goals-muted)', color: 'var(--mod-goals)' }}>{goal.progress_pct}%</span>
-                </div>
+        <SectionPanel
+          icon={FolderKanban}
+          title="Active Projects"
+          color="var(--mod-projects)"
+          items={activeProjects}
+          emptyText="No active projects"
+          onNavigate={() => navigate('/projects')}
+          renderItem={(proj, i) => (
+            <div key={proj.id} style={{
+              padding: 'var(--space-3) var(--space-4)',
+              borderBottom: i < activeProjects.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+            }}>
+              <div className="flex-between" style={{ marginBottom: '8px' }}>
+                <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>{proj.name}</span>
+                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--mod-projects)', fontWeight: 600 }}>{proj.progress_pct}%</span>
               </div>
-            )) : (
-              <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--text-muted)' }}>No active goals</div>
-            )}
-          </div>
-        </div>
+              <div className="progress-track" style={{ height: '4px' }}>
+                <div className="progress-fill" style={{ width: `${proj.progress_pct}%`, background: 'linear-gradient(90deg, var(--mod-projects), var(--accent-primary))' }} />
+              </div>
+            </div>
+          )}
+        />
+
+        <SectionPanel
+          icon={Target}
+          title="Top Goals"
+          color="var(--mod-goals)"
+          items={activeGoals}
+          emptyText="No active goals"
+          onNavigate={() => navigate('/goals')}
+          renderItem={(goal, i) => (
+            <div key={goal.id} style={{
+              padding: 'var(--space-3) var(--space-4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              borderBottom: i < activeGoals.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+            }}>
+              <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>{goal.name}</span>
+              <span className="badge badge-goals">{goal.progress_pct}%</span>
+            </div>
+          )}
+        />
 
       </div>
 
-      {/* Floating Action Button for Quick Add */}
+      {/* FAB */}
       <button className="fab" onClick={() => setShowQuickAdd(true)} aria-label="Quick Add">
-        <Plus size={24} />
+        <Plus size={22} strokeWidth={2.5} />
       </button>
 
-      {/* Quick Add Modal */}
       {showQuickAdd && (
-        <QuickAddModal 
-          onClose={() => setShowQuickAdd(false)} 
-          onAdded={(type) => {
-            fetchTodayData(); // refresh dashboard data
-          }} 
+        <QuickAddModal
+          onClose={() => setShowQuickAdd(false)}
+          onAdded={() => fetchTodayData()}
         />
       )}
-
     </div>
   );
 }
