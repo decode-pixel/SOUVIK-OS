@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Clock, Moon, Activity, Sparkles, Plus, Wallet, Target, ListTodo, FolderKanban, Circle, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { CheckCircle2, Clock, Moon, Activity, Sparkles, Plus, Wallet, Target, ListTodo, FolderKanban, Circle, ArrowUpRight, AlertTriangle } from 'lucide-react';
 import QuickAddModal from '../components/QuickAddModal';
+import YearCountdown from '../components/YearCountdown';
+import { getYearProgress } from '../utils/dateUtils';
 
 function MetricCard({ icon: Icon, label, value, subLabel, color, muted, onClick, tint }) {
   return (
@@ -370,6 +372,9 @@ export default function Home() {
         />
 
       </div>
+
+      {/* Year Countdown */}
+      <YearCountdown onViewYear={() => navigate('/review')} />
 
       {/* FAB */}
       <button className="fab" onClick={() => setShowQuickAdd(true)} aria-label="Quick Add">

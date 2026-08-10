@@ -15,6 +15,7 @@ import Projects from './pages/Projects';
 import Goals from './pages/Goals';
 import More from './pages/More';
 import Auth from './pages/Auth';
+import Review from './pages/Review';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -120,6 +121,7 @@ export default function App() {
                 <Route path="tasks" element={<Tasks />} />
                 <Route path="projects" element={<Projects />} />
                 <Route path="goals" element={<Goals />} />
+                <Route path="review" element={<Review />} />
               </Route>
             </Routes>
           </BrowserRouter>

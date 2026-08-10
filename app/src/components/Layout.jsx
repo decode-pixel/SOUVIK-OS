@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Home, CheckSquare, HeartPulse, DollarSign, ListTodo, FolderKanban, Target, Settings, User, LogOut, Sun, Moon, MoreHorizontal } from 'lucide-react';
+import { Home, CheckSquare, HeartPulse, DollarSign, ListTodo, FolderKanban, Target, Settings, User, LogOut, Sun, Moon, MoreHorizontal, BarChart2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 
@@ -13,6 +13,7 @@ const MODULE_COLORS = {
   '/projects': { bg: 'var(--mod-projects-muted)', color: 'var(--mod-projects)', darkBg: 'var(--mod-projects-muted)' },
   '/goals': { bg: 'var(--mod-goals-muted)', color: 'var(--mod-goals)', darkBg: 'var(--mod-goals-muted)' },
   '/health': { bg: 'var(--mod-health-muted)', color: 'var(--mod-health)', darkBg: 'var(--mod-health-muted)' },
+  '/review': { bg: 'var(--accent-primary-muted)', color: 'var(--accent-primary)', darkBg: 'var(--accent-primary-subtle)' },
 };
 
 export default function Layout() {
@@ -52,6 +53,7 @@ export default function Layout() {
   const desktopNavItems = [
     { to: '/', icon: Home, label: 'Home', exact: true },
     { to: '/checkin', icon: CheckSquare, label: 'Check-in' },
+    { to: '/review', icon: BarChart2, label: 'Review' },
     { to: '/finance', icon: DollarSign, label: 'Finance' },
     { to: '/tasks', icon: ListTodo, label: 'Tasks' },
     { to: '/projects', icon: FolderKanban, label: 'Projects' },
@@ -62,7 +64,7 @@ export default function Layout() {
   const mobileNavItems = [
     { to: '/', icon: Home, label: 'Home' },
     { to: '/checkin', icon: CheckSquare, label: 'Check-in' },
-    { to: '/finance', icon: DollarSign, label: 'Finance' },
+    { to: '/review', icon: BarChart2, label: 'Review' },
     { to: '/tasks', icon: ListTodo, label: 'Tasks' },
     { to: '/more', icon: MoreHorizontal, label: 'More' },
   ];
