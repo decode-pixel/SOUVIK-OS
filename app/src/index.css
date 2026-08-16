@@ -347,7 +347,7 @@ p:last-child { margin-bottom: 0; }
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--accent-primary-hover);
-  box-shadow: 0 4px 12px var(--accent-glow);
+  box-shadow: 0 4px 12px var(--accent-glow), 0 0 0 3px rgba(91, 76, 220, 0.08);
   transform: translateY(-1px);
 }
 .btn-primary:active:not(:disabled) { transform: translateY(0) scale(0.98); }
@@ -950,3 +950,65 @@ p:last-child { margin-bottom: 0; }
   to   { transform: scale(1);    opacity: 1; }
 }
 
+/* =============================================================================
+   UTILITY HELPERS
+   ============================================================================= */
+.flex-col       { display: flex; flex-direction: column; }
+.flex-row       { display: flex; flex-direction: row; }
+.flex-wrap      { flex-wrap: wrap; }
+.items-center   { align-items: center; }
+.items-start    { align-items: flex-start; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+.gap-5 { gap: var(--space-5); }
+.w-full { width: 100%; }
+.min-w-0 { min-width: 0; }
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+.mt-2 { margin-top: var(--space-2); }
+.mt-3 { margin-top: var(--space-3); }
+.mt-4 { margin-top: var(--space-4); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-3 { margin-bottom: var(--space-3); }
+.mb-4 { margin-bottom: var(--space-4); }
+.p-4  { padding: var(--space-4); }
+.p-5  { padding: var(--space-5); }
+.opacity-60  { opacity: 0.6; }
+.opacity-0   { opacity: 0; }
+.cursor-pointer { cursor: pointer; }
+.overflow-hidden { overflow: hidden; }
+.rounded-full { border-radius: var(--radius-full); }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.flex-1 { flex: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
+.relative { position: relative; }
+.absolute { position: absolute; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: var(--border-subtle);
+  border: none;
+  margin: var(--space-4) 0;
+}
+
+/* Responsive visibility */
+@media (max-width: 768px) {
+  .hide-mobile  { display: none !important; }
+  .show-mobile  { display: flex !important; }
+}
+@media (min-width: 769px) {
+  .hide-desktop { display: none !important; }
+  .show-desktop { display: flex !important; }
+}
+
+/* Mobile padding fix for pages */
+@media (max-width: 768px) {
+  .page-container {
+    padding-bottom: 100px;
+  }
+}

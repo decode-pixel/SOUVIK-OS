@@ -71,16 +71,36 @@ export default function Layout() {
 
   const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'S';
 
-  const getPageTitle = () => {
-    const path = location.pathname.split('/')[1];
-    if (!path) return 'Dashboard';
-    if (path === 'checkin') return 'Check-in';
-    return path.charAt(0).toUpperCase() + path.slice(1);
-  };
+
 
   const isActive = (to) => {
     if (to === '/') return location.pathname === '/';
     return location.pathname.startsWith(to);
+  };
+
+  // Get active module color for header accent
+  const activeModulePath = Object.keys(MODULE_COLORS).find(path => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  }) || '/';
+  const activeAccent = MODULE_COLORS[activeModulePath]?.color || 'var(--accent-primary)';
+
+  const getPageTitle = () => {
+    const path = location.pathname.split('/')[1];
+    const titles = {
+      '':          'Dashboard',
+      'checkin':   'Daily Check-in',
+      'finance':   'Finance',
+      'tasks':     'Tasks',
+      'projects':  'Projects',
+      'goals':     'Goals',
+      'health':    'Health',
+      'review':    'Life Review',
+      'profile':   'Profile',
+      'settings':  'Settings',
+      'more':      'More',
+    };
+    return titles[path] || (path.charAt(0).toUpperCase() + path.slice(1));
   };
 
   return (
@@ -181,6 +201,12 @@ export default function Layout() {
             borderLeft: 'none', borderRight: 'none', borderTop: 'none',
           }}
         >
+          {/* Module accent line */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px',
+            background: `linear-gradient(90deg, ${activeAccent}55 0%, ${activeAccent}cc 30%, ${activeAccent}55 100%)`,
+            transition: 'all var(--dur-emphasis) var(--ease-standard)',
+          }} />
           <div>
             <h1 style={{
               margin: 0,
