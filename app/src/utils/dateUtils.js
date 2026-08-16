@@ -1,6 +1,6 @@
 /**
  * SOUVIK OS — Date Utilities
- * Centralized date handling, re-exporting core pure functions from src/lib/date.ts.
+ * Centralized date handling, re-exporting core pure functions from src/lib/date.ts and src/lib/year.ts.
  */
 
 import {
@@ -14,6 +14,8 @@ import {
   isFuture,
 } from '../lib/date';
 
+import { getYearProgress } from '../lib/year';
+
 // Re-export core timezone-safe utilities
 export {
   toLocalDate,
@@ -22,6 +24,7 @@ export {
   addDays,
   isToday,
   isFuture,
+  getYearProgress,
 };
 
 // Aliases for backwards compatibility
@@ -94,40 +97,6 @@ export function shiftMonth(year, month, delta) {
 }
 
 /**
- * Calculate year progress metrics for the CURRENT year.
- * Returns an object with dayOfYear, totalDays, daysRemaining, pct, weeksRemaining.
- */
-export function getYearProgress() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const startOfYear = new Date(year, 0, 1);
-  const startOfNextYear = new Date(year + 1, 0, 1);
-  const totalDays = Math.round((startOfNextYear - startOfYear) / 86400000);
-
-  // Day of year (1-indexed)
-  const dayOfYear = Math.floor((now - startOfYear) / 86400000) + 1;
-  const daysRemaining = totalDays - dayOfYear + 1; // include today
-
-  const pct = ((dayOfYear - 1) / totalDays) * 100;
-
-  const weeksRemaining = Math.ceil(daysRemaining / 7);
-  const endOfYear = new Date(year, 11, 31);
-  const msRemaining = endOfYear - now;
-  const monthsRemainingDecimal = msRemaining / (30.44 * 24 * 3600 * 1000);
-
-  return {
-    year,
-    totalDays,
-    dayOfYear,
-    daysRemaining,
-    weeksRemaining,
-    monthsRemaining: Math.floor(monthsRemainingDecimal),
-    pct: Math.min(100, Math.max(0, pct)),
-    pctDisplay: pct.toFixed(1),
-  };
-}
-
-/**
  * Calculate goal health status based on time elapsed vs progress.
  * Returns: 'completed' | 'on_track' | 'at_risk' | 'overdue'
  */
@@ -178,11 +147,18 @@ export function getGoalHealthDisplay(health) {
 
 /**
  * Get days remaining until a deadline (or year end if no deadline).
+ * Always consistent with getYearProgress().daysRemaining.
  */
 export function getDaysRemaining(deadlineStr) {
-  const target = deadlineStr ? parseLocalDate(deadlineStr) : new Date(new Date().getFullYear(), 11, 31);
-  const now = new Date();
-  const diff = Math.ceil((target - now) / 86400000);
+  if (!deadlineStr) {
+    return getYearProgress().daysRemaining;
+  }
+  const target = parseLocalDate(deadlineStr);
+  if (!target) {
+    return getYearProgress().daysRemaining;
+  }
+  const todayDate = parseLocalDate(today());
+  const diff = Math.ceil((target.getTime() - todayDate.getTime()) / 86400000);
   return Math.max(0, diff);
 }
 

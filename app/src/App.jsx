@@ -17,6 +17,9 @@ import Goals from './pages/Goals';
 import More from './pages/More';
 import Auth from './pages/Auth';
 import Review from './pages/Review';
+import NotFound from './pages/NotFound';
+import PWAPrompt from './components/PWAPrompt';
+import OfflineIndicator from './components/OfflineIndicator';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -105,6 +108,8 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <ThemeProvider>
+          <OfflineIndicator />
+          <PWAPrompt />
           <NotificationEngine />
           <BrowserRouter>
             <Routes>
@@ -124,6 +129,12 @@ export default function App() {
                 <Route path="goals" element={<Goals />} />
                 <Route path="review" element={<Review />} />
               </Route>
+
+              {/* Friendly redirect for /dashboard to / */}
+              <Route path="/dashboard" element={<Navigate to="/" replace />} />
+
+              {/* Catch-all 404 Route */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </ThemeProvider>
