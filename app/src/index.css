@@ -926,3 +926,27 @@ p:last-child { margin-bottom: 0; }
 .bg-secondary { background: var(--bg-subtle); }
 .danger { color: var(--color-error); }
 .card-glass { background: var(--glass-bg) !important; backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-color: var(--glass-border-outer) !important; }
+
+/* =============================================================================
+   GLOBAL ANIMATIONS
+   ============================================================================= */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0.5; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes slideInUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.96); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
