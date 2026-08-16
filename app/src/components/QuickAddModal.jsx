@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { today } from '../lib/date';
 import { ListTodo, Wallet, X } from 'lucide-react';
 
 export default function QuickAddModal({ onClose, onAdded }) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('task');
   const [loading, setLoading] = useState(false);
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = today();
 
   const [taskTitle, setTaskTitle] = useState('');
   const [taskProjectId, setTaskProjectId] = useState('');

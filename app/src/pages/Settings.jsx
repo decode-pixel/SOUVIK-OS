@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { today } from '../lib/date';
 import { Plus, Trash2, Check, X, Sparkles, Flame } from 'lucide-react';
 
 export default function Settings() {
@@ -222,7 +223,7 @@ export default function Settings() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `souvik_os_export_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `souvik_os_export_${today()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

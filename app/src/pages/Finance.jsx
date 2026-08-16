@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { today, startOfMonth, endOfMonth } from '../lib/date';
 import { Plus, Trash2, ChevronLeft, ChevronRight, Calendar, ArrowUpRight, ArrowDownRight, Wallet, TrendingUp } from 'lucide-react';
 
 export default function Finance() {
@@ -22,7 +23,7 @@ export default function Finance() {
   const [newTxType, setNewTxType] = useState('expense');
   const [newTxAmount, setNewTxAmount] = useState('');
   const [newTxCategoryId, setNewTxCategoryId] = useState('');
-  const [newTxDate, setNewTxDate] = useState(currentDate.toISOString().split('T')[0]);
+  const [newTxDate, setNewTxDate] = useState(today());
   const [newTxNote, setNewTxNote] = useState('');
   const [savingTx, setSavingTx] = useState(false);
 
@@ -59,11 +60,8 @@ export default function Finance() {
       setCategories(catData || []);
 
       // Determine date range for selected month
-      const startDate = new Date(selectedYear, selectedMonth, 1);
-      const endDate = new Date(selectedYear, selectedMonth + 1, 0); // last day of month
-
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = endDate.toISOString().split('T')[0];
+      const startDateStr = startOfMonth(new Date(selectedYear, selectedMonth, 1));
+      const endDateStr = endOfMonth(new Date(selectedYear, selectedMonth, 1));
 
       // Fetch Transactions
       const { data: txData, error: txError } = await supabase

@@ -1,50 +1,46 @@
 /**
  * SOUVIK OS — Date Utilities
- * Centralized, timezone-safe date handling.
- * All dates use local time (no UTC conversion bugs for daily tracking).
+ * Centralized date handling, re-exporting core pure functions from src/lib/date.ts.
  */
 
-/**
- * Get today's date as YYYY-MM-DD string in LOCAL time.
- */
-export function getTodayStr() {
-  const now = new Date();
-  return formatDateStr(now);
-}
+import {
+  toLocalDate,
+  today,
+  parseLocalDate,
+  startOfMonth as _startOfMonth,
+  endOfMonth as _endOfMonth,
+  addDays,
+  isToday,
+  isFuture,
+} from '../lib/date';
 
-/**
- * Format a Date object to YYYY-MM-DD string in LOCAL time.
- */
-export function formatDateStr(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
+// Re-export core timezone-safe utilities
+export {
+  toLocalDate,
+  today,
+  parseLocalDate,
+  addDays,
+  isToday,
+  isFuture,
+};
 
-/**
- * Parse a YYYY-MM-DD string as a local Date (not UTC).
- * Avoids the "date shifts by one day" timezone bug.
- */
-export function parseDateStr(dateStr) {
-  if (!dateStr) return null;
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
+// Aliases for backwards compatibility
+export const formatDateStr = toLocalDate;
+export const getTodayStr = today;
+export const parseDateStr = parseLocalDate;
 
 /**
  * Get first day of a month as YYYY-MM-DD.
  */
 export function getMonthStart(year, month) {
-  return `${year}-${String(month + 1).padStart(2, '0')}-01`;
+  return _startOfMonth(new Date(year, month, 1));
 }
 
 /**
  * Get last day of a month as YYYY-MM-DD.
  */
 export function getMonthEnd(year, month) {
-  const lastDay = new Date(year, month + 1, 0).getDate();
-  return `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  return _endOfMonth(new Date(year, month, 1));
 }
 
 /**
@@ -70,7 +66,7 @@ export function formatMonthLabel(year, month) {
  * e.g. "2026-08-10" → "August 10, 2026"
  */
 export function formatDateFull(dateStr) {
-  const d = parseDateStr(dateStr);
+  const d = parseLocalDate(dateStr);
   if (!d) return dateStr;
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }
@@ -80,7 +76,7 @@ export function formatDateFull(dateStr) {
  * e.g. "2026-08-10" → "Mon, Aug 10"
  */
 export function formatDateShort(dateStr) {
-  const d = parseDateStr(dateStr);
+  const d = parseLocalDate(dateStr);
   if (!d) return dateStr;
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
@@ -115,9 +111,6 @@ export function getYearProgress() {
   const pct = ((dayOfYear - 1) / totalDays) * 100;
 
   const weeksRemaining = Math.ceil(daysRemaining / 7);
-  const monthsRemaining = 12 - now.getMonth() - (now.getDate() > 1 ? 0 : 0);
-
-  // More precise months remaining
   const endOfYear = new Date(year, 11, 31);
   const msRemaining = endOfYear - now;
   const monthsRemainingDecimal = msRemaining / (30.44 * 24 * 3600 * 1000);
@@ -142,7 +135,6 @@ export function getGoalHealth(progressPct, status, deadlineStr) {
   if (status === 'completed') return 'completed';
 
   if (!deadlineStr) {
-    // No deadline — use year progress as proxy
     const { pct: yearPct } = getYearProgress();
     const expected = yearPct;
     if (progressPct >= 100) return 'completed';
@@ -151,7 +143,7 @@ export function getGoalHealth(progressPct, status, deadlineStr) {
   }
 
   const now = new Date();
-  const deadline = parseDateStr(deadlineStr);
+  const deadline = parseLocalDate(deadlineStr);
 
   if (!deadline) return 'on_track';
 
@@ -159,8 +151,6 @@ export function getGoalHealth(progressPct, status, deadlineStr) {
     return progressPct >= 100 ? 'completed' : 'overdue';
   }
 
-  // Calculate: what % of time from creation has elapsed?
-  // Use Jan 1 of current year as start proxy if no created_at
   const startOfYear = new Date(now.getFullYear(), 0, 1);
   const totalDuration = deadline - startOfYear;
   const elapsed = now - startOfYear;
@@ -168,7 +158,6 @@ export function getGoalHealth(progressPct, status, deadlineStr) {
 
   if (progressPct >= 100) return 'completed';
 
-  // If progress >= 90% of expected: on_track. If < 70%: at_risk.
   const expected = timeElapsedPct;
   if (progressPct >= expected * 0.90) return 'on_track';
   return 'at_risk';
@@ -189,10 +178,9 @@ export function getGoalHealthDisplay(health) {
 
 /**
  * Get days remaining until a deadline (or year end if no deadline).
- * Returns null if no deadline and no meaningful context.
  */
 export function getDaysRemaining(deadlineStr) {
-  const target = deadlineStr ? parseDateStr(deadlineStr) : new Date(new Date().getFullYear(), 11, 31);
+  const target = deadlineStr ? parseLocalDate(deadlineStr) : new Date(new Date().getFullYear(), 11, 31);
   const now = new Date();
   const diff = Math.ceil((target - now) / 86400000);
   return Math.max(0, diff);
@@ -215,18 +203,4 @@ export function getMonthDays(year, month) {
  */
 export function getFirstDayOfWeek(year, month) {
   return new Date(year, month, 1).getDay();
-}
-
-/**
- * Check if a date string is today.
- */
-export function isToday(dateStr) {
-  return dateStr === getTodayStr();
-}
-
-/**
- * Check if a date string is in the future.
- */
-export function isFuture(dateStr) {
-  return dateStr > getTodayStr();
 }

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { CheckCircle2, Clock, Moon, Activity, Sparkles, Plus, Wallet, Target, ListTodo, FolderKanban, Circle, ArrowUpRight, AlertTriangle } from 'lucide-react';
 import QuickAddModal from '../components/QuickAddModal';
 import YearCountdown from '../components/YearCountdown';
+import { today, startOfMonth, endOfMonth } from '../lib/date';
 import { getYearProgress } from '../utils/dateUtils';
 
 function MetricCard({ icon: Icon, label, value, subLabel, color, muted, onClick, tint }) {
@@ -117,7 +118,7 @@ export default function Home() {
   const [activeGoals, setActiveGoals] = useState([]);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = today();
 
   useEffect(() => {
     if (user) fetchTodayData();
@@ -150,9 +151,9 @@ export default function Home() {
       setActiveGoals(goalsData || []);
 
       const currentDate = new Date();
-      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0];
-      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
-      const { data: txData } = await supabase.from('transactions').select('amount').eq('user_id', user.id).eq('type', 'expense').gte('date', startOfMonth).lte('date', endOfMonth);
+      const startOfMonthStr = startOfMonth(currentDate);
+      const endOfMonthStr = endOfMonth(currentDate);
+      const { data: txData } = await supabase.from('transactions').select('amount').eq('user_id', user.id).eq('type', 'expense').gte('date', startOfMonthStr).lte('date', endOfMonthStr);
       setMonthExpense((txData || []).reduce((acc, t) => acc + Number(t.amount), 0));
     } catch (err) {
       console.error('Error fetching home data:', err);

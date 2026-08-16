@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { supabase } from './supabaseClient';
+import { today } from './lib/date';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
@@ -70,7 +71,7 @@ function NotificationEngine() {
         // Let's stick to the simplest version first: it will notify every 15m inside the window until done.
         
         if (currentTimeStr >= start && currentTimeStr <= end) {
-          const todayStr = new Date().toISOString().split('T')[0];
+          const todayStr = today();
           const { data: checkin } = await supabase.from('daily_checkins').select('id').eq('user_id', user.id).eq('date', todayStr).maybeSingle();
           
           if (!checkin) {

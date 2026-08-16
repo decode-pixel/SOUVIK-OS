@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { today, addDays } from '../lib/date';
 import { Moon, Activity, Scale, Sparkles, Plus, TrendingUp, Calendar, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
 
 export default function Health() {
@@ -15,7 +16,7 @@ export default function Health() {
   // Weight logging state
   const [showWeightModal, setShowWeightModal] = useState(false);
   const [newWeight, setNewWeight] = useState('');
-  const [weightDate, setWeightDate] = useState(new Date().toISOString().split('T')[0]);
+  const [weightDate, setWeightDate] = useState(today());
   const [weightSaving, setWeightSaving] = useState(false);
 
   // Settings module toggle check
@@ -45,9 +46,7 @@ export default function Health() {
       }
 
       // Calculate start date based on range
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - (timeRange - 1));
-      const startDateStr = startDate.toISOString().split('T')[0];
+      const startDateStr = addDays(today(), -(timeRange - 1));
 
       // 1. Fetch check-ins
       const { data: checkinData, error: checkinErr } = await supabase
@@ -79,13 +78,12 @@ export default function Health() {
       setHabitLogs(logsData || []);
 
       // 4. Fetch weight logs (last 60 days)
-      const weightStartDate = new Date();
-      weightStartDate.setDate(weightStartDate.getDate() - 60);
+      const weightStartDateStr = addDays(today(), -60);
       const { data: weights } = await supabase
         .from('weight_logs')
         .select('*')
         .eq('user_id', user.id)
-        .gte('date', weightStartDate.toISOString().split('T')[0])
+        .gte('date', weightStartDateStr)
         .order('date', { ascending: true });
 
       setWeightLogs(weights || []);
@@ -169,9 +167,7 @@ export default function Health() {
   // Generate date array for charts
   const dateList = [];
   for (let i = timeRange - 1; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    dateList.push(d.toISOString().split('T')[0]);
+    dateList.push(addDays(today(), -i));
   }
 
   if (!isModuleEnabled) {

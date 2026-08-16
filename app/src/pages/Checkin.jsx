@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { today, addDays } from '../lib/date';
 import { CheckCircle2, ChevronLeft, ChevronRight, Sparkles, Moon, Activity, Flame, Award, Calendar, ArrowLeft, ArrowRight } from 'lucide-react';
 
 const DEFAULT_HABITS = [
@@ -17,7 +18,7 @@ export default function Checkin() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = today();
   const selectedDate = searchParams.get('date') || todayStr;
   const isToday = selectedDate === todayStr;
 
@@ -166,9 +167,7 @@ export default function Checkin() {
   };
 
   const shiftDate = (days) => {
-    const d = new Date(selectedDate);
-    d.setDate(d.getDate() + days);
-    const newDateStr = d.toISOString().split('T')[0];
+    const newDateStr = addDays(selectedDate, days);
     if (newDateStr > todayStr) return;
     setSearchParams({ date: newDateStr });
   };

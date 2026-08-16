@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { today } from '../lib/date';
 import { Plus, Trash2, CheckCircle2, Circle, Clock, FolderKanban, ListTodo } from 'lucide-react';
 
 export default function Tasks() {
@@ -15,7 +16,7 @@ export default function Tasks() {
   const [newTaskProjectId, setNewTaskProjectId] = useState('');
   const [savingTask, setSavingTask] = useState(false);
   
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = today();
   const [selectedDate, setSelectedDate] = useState(todayStr);
 
   useEffect(() => {

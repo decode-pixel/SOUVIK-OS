@@ -16,7 +16,7 @@ import { DonutRing, SparkLine, MiniBarChart } from '../components/MiniCharts';
 import {
   getMonthStart, getMonthEnd, getDaysInMonth, shiftMonth,
   getYearProgress, getGoalHealth, getGoalHealthDisplay, getDaysRemaining,
-  formatMonthLabel, parseDateStr
+  formatMonthLabel, parseDateStr, today, addDays
 } from '../utils/dateUtils';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -117,10 +117,9 @@ export default function Review() {
       const prevTotal = getDaysInMonth(prev.year, prev.month);
 
       // Current week
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - now.getDay());
-      const weekStartStr = `${weekStart.getFullYear()}-${String(weekStart.getMonth()+1).padStart(2,'0')}-${String(weekStart.getDate()).padStart(2,'0')}`;
-      const weekEndStr   = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const currentToday = today();
+      const weekStartStr = addDays(currentToday, -now.getDay());
+      const weekEndStr   = currentToday;
 
       const [
         { data: checkinData },
