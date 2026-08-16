@@ -16,6 +16,7 @@ import Projects from './pages/Projects';
 import Goals from './pages/Goals';
 import More from './pages/More';
 import Auth from './pages/Auth';
+import ResetPassword from './pages/ResetPassword';
 import Review from './pages/Review';
 import NotFound from './pages/NotFound';
 import PWAPrompt from './components/PWAPrompt';
@@ -114,6 +115,7 @@ export default function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/reset" element={<ResetPassword />} />
               
               <Route path="/" element={<ProtectedRoute><ErrorBoundary><Layout /></ErrorBoundary></ProtectedRoute>}>
                 <Route index element={<Home />} />

@@ -29,6 +29,8 @@ export const AuthProvider = ({ children }) => {
     signInWithGoogle: () => supabase.auth.signInWithOAuth({ 
       provider: 'google'
     }),
+    resetPassword: (email, redirectTo) => supabase.auth.resetPasswordForEmail(email, { redirectTo }),
+    updatePassword: (password) => supabase.auth.updateUser({ password }),
     signOut: () => supabase.auth.signOut(),
     user,
     loading

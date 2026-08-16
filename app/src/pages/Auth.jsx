@@ -3,28 +3,37 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const { signIn, signInWithGoogle, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
+
     try {
-      const { error } = isLogin
-        ? await signIn({ email, password })
-        : await signUp({ email, password });
-      if (error) throw error;
-      if (isLogin) navigate('/');
-      else setError('Check your email for the confirmation link.');
+      if (isForgotPassword) {
+        // Send reset email, telling Supabase to redirect back to our /auth/reset route
+        const { error } = await resetPassword(email, `${window.location.origin}/auth/reset`);
+        if (error) throw error;
+        setSuccess('Check your email for the password reset link.');
+      } else {
+        const { error } = await signIn({ email, password });
+        if (error) throw error;
+        navigate('/');
+      }
     } catch (err) {
-      setError(err.message || 'An error occurred during authentication.');
+      // Supabase returns standard error messages. Let's make "Signups not allowed" clear if they somehow try (though UI is hidden)
+      const msg = err.message || 'An error occurred during authentication.';
+      setError(msg.includes('Signups not allowed') ? 'New account creation is disabled for this private instance.' : msg);
     } finally {
       setLoading(false);
     }
@@ -130,14 +139,15 @@ export default function Auth() {
               <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 'var(--font-size-lg)', letterSpacing: '-0.02em' }}>Souvik OS</span>
             </div>
             <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-1)' }}>
-              {isLogin ? 'Welcome back' : 'Create your account'}
+              {isForgotPassword ? 'Reset password' : 'Welcome back'}
             </h1>
             <p style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)', margin: 0 }}>
-              {isLogin ? 'Sign in to your personal OS' : 'Start your personal operating system'}
+              {isForgotPassword ? "Enter your email to receive a reset link" : 'Sign in to your personal OS'}
             </p>
           </div>
 
           {/* Error */}
+          {/* Error & Success */}
           {error && (
             <div style={{
               padding: 'var(--space-3) var(--space-4)',
@@ -149,6 +159,19 @@ export default function Auth() {
               border: '1px solid rgba(220,38,38,0.15)',
             }}>
               {error}
+            </div>
+          )}
+          {success && (
+            <div style={{
+              padding: 'var(--space-3) var(--space-4)',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--mod-finance-muted)',
+              color: 'var(--mod-finance)',
+              fontSize: 'var(--font-size-sm)',
+              marginBottom: 'var(--space-5)',
+              border: '1px solid rgba(13, 158, 110, 0.15)',
+            }}>
+              {success}
             </div>
           )}
 
@@ -211,19 +234,34 @@ export default function Auth() {
                 autoComplete="email"
               />
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
-              <label htmlFor="auth-password">Password</label>
-              <input
-                id="auth-password"
-                type="password"
-                className="input"
-                placeholder={isLogin ? 'Enter your password' : 'Create a strong password'}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                autoComplete={isLogin ? 'current-password' : 'new-password'}
-              />
-            </div>
+            {!isForgotPassword && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0 }}>
+                  <label htmlFor="auth-password">Password</label>
+                  <button
+                    type="button"
+                    onClick={() => { setIsForgotPassword(true); setError(''); setSuccess(''); }}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'var(--accent-primary)', fontSize: 'var(--font-size-xs)',
+                      padding: 0, fontWeight: 500
+                    }}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <input
+                  id="auth-password"
+                  type="password"
+                  className="input"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+              </>
+            )}
 
             <button
               type="submit"
@@ -231,28 +269,25 @@ export default function Auth() {
               style={{ width: '100%', minHeight: '44px', fontWeight: 600, marginTop: 'var(--space-2)' }}
               disabled={loading || googleLoading}
             >
-              {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
+              {loading ? 'Processing...' : (isForgotPassword ? 'Send Reset Link' : 'Sign In')}
             </button>
           </form>
 
-          {/* Toggle */}
-          <div style={{ marginTop: 'var(--space-6)', textAlign: 'center' }}>
-            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)' }}>
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
-            </span>
-            <button
-              type="button"
-              onClick={() => { setIsLogin(!isLogin); setError(''); }}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: 'var(--accent-primary)', fontWeight: 600,
-                fontSize: 'var(--font-size-sm)', fontFamily: 'inherit',
-                padding: 0, textDecoration: 'underline', textUnderlineOffset: '2px',
-              }}
-            >
-              {isLogin ? 'Sign up' : 'Sign in'}
-            </button>
-          </div>
+          {isForgotPassword && (
+            <div style={{ marginTop: 'var(--space-6)', textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => { setIsForgotPassword(false); setError(''); setSuccess(''); }}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--text-secondary)', fontWeight: 500,
+                  fontSize: 'var(--font-size-sm)', padding: 0
+                }}
+              >
+                ← Back to sign in
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
