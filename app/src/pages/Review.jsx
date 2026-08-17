@@ -2,17 +2,16 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import {
-  Calendar, Target, TrendingUp, CheckCircle2, AlertTriangle,
-  BarChart2, ChevronRight, ChevronDown, Sparkles, Moon, Activity,
-  Wallet, ListTodo, BookOpen, ArrowUpRight, ArrowDownRight, Minus,
-  Award, Flame, Clock, Users, Star
+  CheckCircle2, AlertTriangle,
+  Sparkles, Moon, Activity,
+  Wallet, ListTodo, Clock, Star
 } from 'lucide-react';
 import MonthPicker from '../components/MonthPicker';
 import MonthlyCalendar from '../components/MonthlyCalendar';
 import DailyDetailDrawer from '../components/DailyDetailDrawer';
 import YearCountdown from '../components/YearCountdown';
 import HabitHeatmap from '../components/HabitHeatmap';
-import { DonutRing, SparkLine, MiniBarChart } from '../components/MiniCharts';
+import { DonutRing, SparkLine } from '../components/MiniCharts';
 import {
   getMonthStart, getMonthEnd, getDaysInMonth, shiftMonth,
   getYearProgress, getGoalHealth, getGoalHealthDisplay, getDaysRemaining,
@@ -32,11 +31,10 @@ function computeMonthStats(checkins, habits, logs, tasks, txData, totalDays) {
 
   // Habit consistency (good habits only)
   const goodHabits = (habits || []).filter(h => h.category === 'good_habit');
-  let habitDone = 0, habitPossible = 0;
+  let habitDone = 0;
   goodHabits.forEach(habit => {
     (logs || []).forEach(log => {
       if (log.habit_id !== habit.id) return;
-      habitPossible++;
       const done = habit.type === 'boolean' ? Boolean(log.value_bool) : (log.value_count || 0) > 0;
       if (done) habitDone++;
     });
@@ -77,7 +75,7 @@ function computeMonthStats(checkins, habits, logs, tasks, txData, totalDays) {
 
 export default function Review() {
   const { user } = useAuth();
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
 
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
   const [selectedYear, setSelectedYear]   = useState(now.getFullYear());
@@ -189,7 +187,7 @@ export default function Review() {
     } finally {
       setLoading(false);
     }
-  }, [user, monthStart, monthEnd, totalDays]);
+  }, [user, monthStart, monthEnd, selectedMonth, selectedYear, now]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -718,7 +716,7 @@ function CompareCard({ label, prev, curr, unit, decimals = 0 }) {
   );
 }
 
-function WeeklySnapshot({ weeklyData: wd, habits }) {
+function WeeklySnapshot({ weeklyData: wd }) {
   if (!wd) return null;
   return (
     <div className="card" style={{ padding: 'var(--space-5)', borderLeft: '3px solid var(--accent-primary)' }}>

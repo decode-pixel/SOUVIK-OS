@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { getFirstDayOfWeek, getDaysInMonth, formatDateStr, isToday, isFuture } from '../utils/dateUtils';
+import { getFirstDayOfWeek, getDaysInMonth, formatDateStr } from '../utils/dateUtils';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 

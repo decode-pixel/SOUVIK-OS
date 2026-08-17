@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { today, addDays } from '../lib/date';
-import { Moon, Activity, Scale, Sparkles, Plus, TrendingUp, Calendar, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
+import { Moon, Activity, Scale, Sparkles, Plus, Calendar, CheckCircle2 } from 'lucide-react';
 
 export default function Health() {
   const { user } = useAuth();
@@ -22,13 +22,7 @@ export default function Health() {
   // Settings module toggle check
   const [isModuleEnabled, setIsModuleEnabled] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadHealthData();
-    }
-  }, [user, timeRange]);
-
-  async function loadHealthData() {
+  const loadHealthData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -93,7 +87,13 @@ export default function Health() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user, timeRange]);
+
+  useEffect(() => {
+    if (user) {
+      loadHealthData();
+    }
+  }, [user, loadHealthData]);
 
   async function handleAddWeight(e) {
     e.preventDefault();

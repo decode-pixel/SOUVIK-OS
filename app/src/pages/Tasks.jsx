@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { today } from '../lib/date';
@@ -19,13 +19,7 @@ export default function Tasks() {
   const todayStr = today();
   const [selectedDate, setSelectedDate] = useState(todayStr);
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user, selectedDate]);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -64,7 +58,13 @@ export default function Tasks() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadData();
+    }
+  }, [user, loadData]);
 
   async function enableTasksModule() {
     try {

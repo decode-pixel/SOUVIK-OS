@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { Plus, Trash2, Target, CheckCircle2, TrendingUp } from 'lucide-react';
@@ -20,13 +20,8 @@ export default function Goals() {
   const [editingProgressId, setEditingProgressId] = useState(null);
   const [editingProgressVal, setEditingProgressVal] = useState(0);
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user]);
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -56,7 +51,13 @@ export default function Goals() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadData();
+    }
+  }, [user, loadData]);
 
   async function enableGoalsModule() {
     try {

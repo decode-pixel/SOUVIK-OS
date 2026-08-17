@@ -87,7 +87,6 @@ export default function More() {
         <div className="label-caps" style={{ marginBottom: 'var(--space-3)', paddingLeft: 'var(--space-1)' }}>Account</div>
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           {account.map((item, idx) => {
-            const cfg = MODULE_CONFIG[item.to] || {};
             return (
               <NavLink
                 key={item.to}

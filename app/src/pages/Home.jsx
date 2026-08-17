@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Clock, Moon, Activity, Sparkles, Plus, Wallet, Target, ListTodo, FolderKanban, Circle, ArrowUpRight, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Clock, Moon, Activity, Sparkles, Plus, Wallet, Target, ListTodo, FolderKanban, Circle, ArrowUpRight } from 'lucide-react';
 import QuickAddModal from '../components/QuickAddModal';
 import YearCountdown from '../components/YearCountdown';
 import { today, startOfMonth, endOfMonth } from '../lib/date';
-import { getYearProgress } from '../utils/dateUtils';
 
 function MetricCard({ icon: Icon, label, value, subLabel, color, muted, onClick, tint }) {
   return (
@@ -64,7 +63,7 @@ function MetricCard({ icon: Icon, label, value, subLabel, color, muted, onClick,
   );
 }
 
-function SectionPanel({ icon: Icon, title, color, items, emptyText, navigateTo, onNavigate, renderItem }) {
+function SectionPanel({ icon: Icon, title, color, items, emptyText, onNavigate, renderItem }) {
   return (
     <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
       <div className="flex-between" style={{
@@ -120,11 +119,9 @@ export default function Home() {
 
   const todayStr = today();
 
-  useEffect(() => {
-    if (user) fetchTodayData();
-  }, [user]);
 
-  async function fetchTodayData() {
+
+  const fetchTodayData = useCallback(async () => {
     try {
       setLoading(true);
       const [
@@ -160,7 +157,11 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user, todayStr]);
+
+  useEffect(() => {
+    if (user) fetchTodayData();
+  }, [user, fetchTodayData]);
 
   const isCheckinDone = Boolean(todayCheckin);
   const completedGoodHabitsCount = habits.filter(h => h.category === 'good_habit').filter(h => {

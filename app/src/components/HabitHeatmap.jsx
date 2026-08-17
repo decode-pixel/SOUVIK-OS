@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { getMonthDays, getTodayStr, formatMonthLabel } from '../utils/dateUtils';
+import { getMonthDays, getTodayStr } from '../utils/dateUtils';
 
 /**
  * HabitHeatmap — Shows a month grid for a single habit.

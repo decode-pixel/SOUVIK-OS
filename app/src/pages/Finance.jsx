@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { today, startOfMonth, endOfMonth } from '../lib/date';
-import { Plus, Trash2, ChevronLeft, ChevronRight, Calendar, ArrowUpRight, ArrowDownRight, Wallet, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, ChevronRight, Calendar, ArrowUpRight, ArrowDownRight, Wallet } from 'lucide-react';
 
 export default function Finance() {
   const { user } = useAuth();
@@ -27,13 +27,7 @@ export default function Finance() {
   const [newTxNote, setNewTxNote] = useState('');
   const [savingTx, setSavingTx] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user, selectedMonth, selectedYear]);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -81,7 +75,13 @@ export default function Finance() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user, selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    if (user) {
+      loadData();
+    }
+  }, [user, loadData]);
 
   async function enableFinanceModule() {
     try {

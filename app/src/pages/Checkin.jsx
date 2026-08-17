@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { today, addDays } from '../lib/date';
-import { CheckCircle2, ChevronLeft, ChevronRight, Sparkles, Moon, Activity, Flame, Award, Calendar, ArrowLeft, ArrowRight } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Sparkles, Moon, Activity, Flame, Award, Calendar } from 'lucide-react';
 
 const DEFAULT_HABITS = [
   { name: 'Reading / Learning (30m)', type: 'boolean', category: 'good_habit', sort_order: 1 },
@@ -35,11 +35,7 @@ export default function Checkin() {
   const [isExistingRecord, setIsExistingRecord] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
 
-  useEffect(() => {
-    if (user) loadCheckinData(selectedDate);
-  }, [user, selectedDate]);
-
-  async function loadCheckinData(date) {
+  const loadCheckinData = useCallback(async (date) => {
     try {
       setLoading(true);
       setSubmittedSuccess(false);
@@ -106,7 +102,11 @@ export default function Checkin() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user, isToday]);
+
+  useEffect(() => {
+    if (user) loadCheckinData(selectedDate);
+  }, [user, selectedDate, loadCheckinData]);
 
   const saveDraftLocally = (updatedFields) => {
     if (!isToday || isExistingRecord) return;

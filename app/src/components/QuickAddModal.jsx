@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { today } from '../lib/date';
@@ -20,11 +20,7 @@ export default function QuickAddModal({ onClose, onAdded }) {
   const [expNote, setExpNote] = useState('');
   const [categories, setCategories] = useState([]);
 
-  useEffect(() => {
-    if (user) loadDependencies();
-  }, [user]);
-
-  async function loadDependencies() {
+  const loadDependencies = useCallback(async () => {
     try {
       const [{ data: projData }, { data: catData }] = await Promise.all([
         supabase.from('projects').select('id, name').eq('user_id', user.id).eq('status', 'active'),
@@ -35,7 +31,11 @@ export default function QuickAddModal({ onClose, onAdded }) {
     } catch (err) {
       console.error('Failed to load quick add dependencies:', err);
     }
-  }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) loadDependencies();
+  }, [user, loadDependencies]);
 
   async function handleAddTask(e) {
     e.preventDefault();

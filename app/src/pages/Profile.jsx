@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { User, MapPin, Briefcase, DollarSign, Calendar, Target, CheckCircle2, Loader } from 'lucide-react';
+import { User, MapPin, DollarSign, Calendar, Target, CheckCircle2, Loader } from 'lucide-react';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -15,9 +15,7 @@ export default function Profile() {
     priorities_short: '', priorities_long: '', income_monthly: '',
   });
 
-  useEffect(() => { if (user) getProfile(); }, [user]);
-
-  async function getProfile() {
+  const getProfile = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error, status } = await supabase
@@ -29,7 +27,9 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
+
+  useEffect(() => { if (user) getProfile(); }, [user, getProfile]);
 
   async function updateProfile(e) {
     e.preventDefault();

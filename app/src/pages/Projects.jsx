@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { Plus, Trash2, FolderKanban, CheckCircle2, TrendingUp, Circle, PauseCircle } from 'lucide-react';
@@ -20,13 +20,8 @@ export default function Projects() {
   const [editingProgressId, setEditingProgressId] = useState(null);
   const [editingProgressVal, setEditingProgressVal] = useState(0);
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user]);
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -55,7 +50,13 @@ export default function Projects() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadData();
+    }
+  }, [user, loadData]);
 
   async function enableProjectsModule() {
     try {

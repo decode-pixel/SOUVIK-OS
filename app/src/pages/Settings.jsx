@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { today } from '../lib/date';
-import { Plus, Trash2, Check, X, Sparkles, Flame } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Flame } from 'lucide-react';
 
 export default function Settings() {
   const { user } = useAuth();
@@ -28,13 +28,7 @@ export default function Settings() {
   const [newFinanceCatType, setNewFinanceCatType] = useState('expense');
   const [financeLoading, setFinanceLoading] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      loadAllSettings();
-    }
-  }, [user]);
-
-  async function loadAllSettings() {
+  const loadAllSettings = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -85,7 +79,13 @@ export default function Settings() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadAllSettings();
+    }
+  }, [user, loadAllSettings]);
 
   async function toggleTheme() {
     const newTheme = theme === 'light' ? 'dark' : 'light';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { X, Moon, Activity, Sparkles, Flame, FileText, CheckCircle2, Circle, Edit2, ExternalLink } from 'lucide-react';
+import { X, Moon, Activity, CheckCircle2, Circle, Edit2 } from 'lucide-react';
 import { formatDateFull, parseDateStr, isToday } from '../utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,9 +11,8 @@ import { useNavigate } from 'react-router-dom';
  * Props:
  *   dateStr: string (YYYY-MM-DD) — the day to show
  *   onClose: () => void
- *   onDataChanged?: () => void — callback when data is edited (refreshes parent)
  */
-export default function DailyDetailDrawer({ dateStr, onClose, onDataChanged }) {
+export default function DailyDetailDrawer({ dateStr, onClose }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
