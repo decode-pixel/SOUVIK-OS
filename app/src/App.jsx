@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { supabase } from './supabaseClient';
@@ -8,19 +8,22 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
 import Checkin from './pages/Checkin';
 import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import Health from './pages/Health';
-import Finance from './pages/Finance';
-import Tasks from './pages/Tasks';
-import Projects from './pages/Projects';
-import Goals from './pages/Goals';
 import More from './pages/More';
 import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
-import Review from './pages/Review';
 import NotFound from './pages/NotFound';
 import PWAPrompt from './components/PWAPrompt';
 import OfflineIndicator from './components/OfflineIndicator';
+import PageSkeleton from './components/PageSkeleton';
+
+// Lazy loaded routes
+const Settings = lazy(() => import('./pages/Settings'));
+const Health = lazy(() => import('./pages/Health'));
+const Finance = lazy(() => import('./pages/Finance'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const Projects = lazy(() => import('./pages/Projects'));
+const Goals = lazy(() => import('./pages/Goals'));
+const Review = lazy(() => import('./pages/Review'));
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -121,15 +124,15 @@ export default function App() {
                 <Route index element={<Home />} />
                 <Route path="checkin" element={<Checkin />} />
                 <Route path="profile" element={<Profile />} />
-                <Route path="settings" element={<Settings />} />
                 <Route path="more" element={<More />} />
                 
-                <Route path="health" element={<Health />} />
-                <Route path="finance" element={<Finance />} />
-                <Route path="tasks" element={<Tasks />} />
-                <Route path="projects" element={<Projects />} />
-                <Route path="goals" element={<Goals />} />
-                <Route path="review" element={<Review />} />
+                <Route path="settings" element={<Suspense fallback={<PageSkeleton />}><Settings /></Suspense>} />
+                <Route path="health" element={<Suspense fallback={<PageSkeleton />}><Health /></Suspense>} />
+                <Route path="finance" element={<Suspense fallback={<PageSkeleton />}><Finance /></Suspense>} />
+                <Route path="tasks" element={<Suspense fallback={<PageSkeleton />}><Tasks /></Suspense>} />
+                <Route path="projects" element={<Suspense fallback={<PageSkeleton />}><Projects /></Suspense>} />
+                <Route path="goals" element={<Suspense fallback={<PageSkeleton />}><Goals /></Suspense>} />
+                <Route path="review" element={<Suspense fallback={<PageSkeleton />}><Review /></Suspense>} />
               </Route>
 
               {/* Friendly redirect for /dashboard to / */}
