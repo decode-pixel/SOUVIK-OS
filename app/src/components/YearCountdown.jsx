@@ -2,11 +2,21 @@ import React, { useMemo } from 'react';
 import { getYearProgress } from '../utils/dateUtils';
 
 /**
- * YearCountdown — Premium compact card showing year progress.
- * All values calculated dynamically from current date.
+ * YearCountdown — Shows year progress with sentence format + stat pills.
+ * "2026 ends in 4 months and 9 days"
  */
 export default function YearCountdown({ onViewYear }) {
   const yp = useMemo(() => getYearProgress(), []);
+
+  const sentence = useMemo(() => {
+    const totalDays = yp.daysRemaining;
+    const months = Math.floor(totalDays / 30);
+    const days = totalDays % 30;
+    if (totalDays <= 0) return `${yp.year} has ended`;
+    if (months === 0) return `${yp.year} ends in ${totalDays} day${totalDays !== 1 ? 's' : ''}`;
+    if (days === 0) return `${yp.year} ends in ${months} month${months !== 1 ? 's' : ''}`;
+    return `${yp.year} ends in ${months} month${months !== 1 ? 's' : ''} and ${days} day${days !== 1 ? 's' : ''}`;
+  }, [yp]);
 
   return (
     <div className="card" style={{
@@ -15,7 +25,6 @@ export default function YearCountdown({ onViewYear }) {
       overflow: 'hidden',
       background: 'var(--bg-surface)',
     }}>
-      {/* Background accent */}
       <div style={{
         position: 'absolute', top: 0, right: 0,
         width: '160px', height: '100%',
@@ -24,24 +33,25 @@ export default function YearCountdown({ onViewYear }) {
       }} />
 
       <div style={{ position: 'relative' }}>
-        {/* Title row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+        {/* Title + percentage */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
           <div>
-            <div className="label-caps">Year Progress</div>
+            <div className="label-caps" style={{ marginBottom: 'var(--space-1)' }}>Year Progress — {yp.year}</div>
             <div style={{
               fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 800, fontSize: 'var(--font-size-2xl)',
-              color: 'var(--text-primary)', letterSpacing: '-0.04em',
-              lineHeight: 1, marginTop: '2px',
+              fontWeight: 700,
+              fontSize: 'var(--font-size-md)',
+              color: 'var(--text-primary)',
+              lineHeight: 1.3,
             }}>
-              {yp.year}
+              {sentence}
             </div>
           </div>
           <div style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 800, fontSize: '2rem',
+            fontWeight: 800, fontSize: '1.75rem',
             color: 'var(--accent-primary)', letterSpacing: '-0.04em',
-            lineHeight: 1,
+            lineHeight: 1, flexShrink: 0, marginLeft: 'var(--space-3)',
           }}>
             {yp.pctDisplay}%
           </div>
@@ -54,7 +64,7 @@ export default function YearCountdown({ onViewYear }) {
               className="progress-fill"
               style={{
                 width: `${yp.pct}%`,
-                background: `linear-gradient(90deg, var(--accent-primary) 0%, #9180f5 100%)`,
+                background: 'linear-gradient(90deg, var(--accent-primary) 0%, #9180f5 100%)',
                 height: '100%',
                 borderRadius: 'var(--radius-full)',
                 boxShadow: '0 0 8px var(--accent-glow)',
@@ -64,8 +74,8 @@ export default function YearCountdown({ onViewYear }) {
           </div>
         </div>
 
-        {/* Stats row */}
-        <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
+        {/* Stat pills */}
+        <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
           <StatPill label="Days left" value={yp.daysRemaining} />
           <StatPill label="Weeks left" value={yp.weeksRemaining} />
           <StatPill label="Months left" value={yp.monthsRemaining} />

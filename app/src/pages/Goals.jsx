@@ -14,11 +14,17 @@ export default function Goals() {
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newGoalTimeframe, setNewGoalTimeframe] = useState('Yearly');
   const [newGoalDesc, setNewGoalDesc] = useState('');
+  const [newGoalType, setNewGoalType] = useState('manual');
+  const [newGoalTarget, setNewGoalTarget] = useState('');
+  const [newGoalCurrent, setNewGoalCurrent] = useState('');
+  const [newGoalUnit, setNewGoalUnit] = useState('');
   const [savingGoal, setSavingGoal] = useState(false);
 
   // Edit Progress State
   const [editingProgressId, setEditingProgressId] = useState(null);
   const [editingProgressVal, setEditingProgressVal] = useState(0);
+  const [editingCurrentId, setEditingCurrentId] = useState(null);
+  const [editingCurrentVal, setEditingCurrentVal] = useState(0);
 
 
   const loadData = useCallback(async () => {
@@ -82,13 +88,22 @@ export default function Goals() {
 
     try {
       setSavingGoal(true);
+      const targetVal = newGoalType === 'numeric' && newGoalTarget ? Number(newGoalTarget) : null;
+      const currentVal = newGoalType === 'numeric' && newGoalCurrent ? Number(newGoalCurrent) : null;
+      const computedPct = targetVal && currentVal
+        ? Math.min(100, Math.round((currentVal / targetVal) * 100))
+        : 0;
       const payload = {
         user_id: user.id,
         title: newGoalTitle.trim(),
         timeframe: newGoalTimeframe,
         description: newGoalDesc.trim() || null,
         status: 'active',
-        progress_pct: 0
+        progress_pct: computedPct,
+        goal_type: newGoalType,
+        target_value: targetVal,
+        current_value: currentVal,
+        unit: newGoalUnit.trim() || null,
       };
 
       const { data, error } = await supabase
@@ -104,6 +119,10 @@ export default function Goals() {
       setNewGoalTitle('');
       setNewGoalDesc('');
       setNewGoalTimeframe('Yearly');
+      setNewGoalType('manual');
+      setNewGoalTarget('');
+      setNewGoalCurrent('');
+      setNewGoalUnit('');
     } catch (err) {
       alert('Failed to save goal: ' + err.message);
     } finally {
@@ -115,16 +134,26 @@ export default function Goals() {
     try {
       const pct = Math.max(0, Math.min(100, parseInt(newPct) || 0));
       const newStatus = pct === 100 ? 'completed' : 'active';
-
       setGoals(goals.map(g => g.id === id ? { ...g, progress_pct: pct, status: newStatus } : g));
       setEditingProgressId(null);
-      
-      await supabase
-        .from('goals')
-        .update({ progress_pct: pct, status: newStatus })
-        .eq('id', id);
+      await supabase.from('goals').update({ progress_pct: pct, status: newStatus }).eq('id', id);
     } catch (err) {
       console.error('Error updating progress:', err);
+    }
+  }
+
+  async function updateCurrentValue(goal, newCurrent) {
+    try {
+      const cur = Math.max(0, Number(newCurrent) || 0);
+      const pct = goal.target_value
+        ? Math.min(100, Math.round((cur / Number(goal.target_value)) * 100))
+        : goal.progress_pct;
+      const newStatus = pct >= 100 ? 'completed' : 'active';
+      setGoals(goals.map(g => g.id === goal.id ? { ...g, current_value: cur, progress_pct: pct, status: newStatus } : g));
+      setEditingCurrentId(null);
+      await supabase.from('goals').update({ current_value: cur, progress_pct: pct, status: newStatus }).eq('id', goal.id);
+    } catch (err) {
+      console.error('Error updating current value:', err);
     }
   }
 
@@ -313,14 +342,57 @@ export default function Goals() {
                         </div>
                       ) : (
                         <div 
-                          style={{ fontSize: '0.875rem', fontWeight: 600, minWidth: '40px', textAlign: 'right', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                          onClick={() => { setEditingProgressId(goal.id); setEditingProgressVal(goal.progress_pct); }}
-                          title="Click to edit progress"
+                          style={{ fontSize: '0.875rem', fontWeight: 600, minWidth: '40px', textAlign: 'right', cursor: goal.goal_type !== 'numeric' ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          onClick={() => { if (goal.goal_type !== 'numeric') { setEditingProgressId(goal.id); setEditingProgressVal(goal.progress_pct); } }}
+                          title={goal.goal_type !== 'numeric' ? 'Click to edit progress' : ''}
                         >
-                          {goal.progress_pct}% <TrendingUp size={12} color="var(--text-secondary)" />
+                          {goal.progress_pct}% {goal.goal_type !== 'numeric' && <TrendingUp size={12} color="var(--text-secondary)" />}
                         </div>
                       )}
                     </div>
+
+                    {/* Numeric goal: current value editor + pace */}
+                    {goal.goal_type === 'numeric' && goal.target_value && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-2)', padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>Current:</span>
+                          {editingCurrentId === goal.id ? (
+                            <input
+                              type="number" className="input"
+                              style={{ width: '80px', padding: '2px 6px', minHeight: '26px', fontSize: 'var(--font-size-xs)' }}
+                              value={editingCurrentVal}
+                              onChange={e => setEditingCurrentVal(e.target.value)}
+                              onBlur={() => updateCurrentValue(goal, editingCurrentVal)}
+                              onKeyDown={e => { if (e.key === 'Enter') updateCurrentValue(goal, editingCurrentVal); }}
+                              autoFocus
+                            />
+                          ) : (
+                            <span
+                              style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--mod-goals)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+                              onClick={() => { setEditingCurrentId(goal.id); setEditingCurrentVal(goal.current_value || 0); }}
+                              title="Click to update current value"
+                            >
+                              {goal.unit}{Number(goal.current_value || 0).toLocaleString('en-IN')}
+                            </span>
+                          )}
+                          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>of {goal.unit}{Number(goal.target_value).toLocaleString('en-IN')}</span>
+                        </div>
+                        {(() => {
+                          const remaining = Number(goal.target_value) - Number(goal.current_value || 0);
+                          if (remaining <= 0) return <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-success)', fontWeight: 600 }}>✓ Target reached!</span>;
+                          const daysLeft = goal.deadline
+                            ? Math.max(0, Math.ceil((new Date(goal.deadline) - new Date()) / 86400000))
+                            : (new Date(new Date().getFullYear(), 11, 31) - new Date()) / 86400000;
+                          const monthsLeft = Math.max(1, Math.ceil(daysLeft / 30));
+                          const perMonth = Math.ceil(remaining / monthsLeft);
+                          return (
+                            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>
+                              Need <strong>{goal.unit}{perMonth.toLocaleString('en-IN')}/mo</strong> × {monthsLeft}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -350,7 +422,7 @@ export default function Goals() {
                 
                 <div className="form-group" style={{ margin: 0 }}>
                   <label>Goal Title</label>
-                  <input type="text" className="input" placeholder="e.g. Save 10k, Run a marathon" value={newGoalTitle} onChange={e => setNewGoalTitle(e.target.value)} required />
+                  <input type="text" className="input" placeholder="e.g. Save ₹2,00,000, Run a marathon" value={newGoalTitle} onChange={e => setNewGoalTitle(e.target.value)} required />
                 </div>
 
                 <div className="form-group" style={{ margin: 0 }}>
@@ -361,6 +433,32 @@ export default function Goals() {
                     ))}
                   </select>
                 </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label>Goal Type</label>
+                  <select className="select" value={newGoalType} onChange={e => setNewGoalType(e.target.value)}>
+                    <option value="manual">Manual (% estimate)</option>
+                    <option value="numeric">Numeric target (track with numbers)</option>
+                    <option value="project_linked">Project-linked (binary done/not done)</option>
+                  </select>
+                </div>
+
+                {newGoalType === 'numeric' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px', gap: 'var(--space-3)' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label>Target Value</label>
+                      <input type="number" className="input" placeholder="e.g. 200000" min="0" value={newGoalTarget} onChange={e => setNewGoalTarget(e.target.value)} />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label>Current Value</label>
+                      <input type="number" className="input" placeholder="e.g. 50000" min="0" value={newGoalCurrent} onChange={e => setNewGoalCurrent(e.target.value)} />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label>Unit</label>
+                      <input type="text" className="input" placeholder="₹, km…" value={newGoalUnit} onChange={e => setNewGoalUnit(e.target.value)} />
+                    </div>
+                  </div>
+                )}
 
                 <div className="form-group" style={{ margin: 0 }}>
                   <label>Description (Optional)</label>

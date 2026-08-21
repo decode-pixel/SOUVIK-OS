@@ -9,7 +9,6 @@ import {
 import MonthPicker from '../components/MonthPicker';
 import MonthlyCalendar from '../components/MonthlyCalendar';
 import DailyDetailDrawer from '../components/DailyDetailDrawer';
-import YearCountdown from '../components/YearCountdown';
 import HabitHeatmap from '../components/HabitHeatmap';
 import { DonutRing, SparkLine } from '../components/MiniCharts';
 import {
@@ -607,8 +606,6 @@ export default function Review() {
             <p style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>Your direction and progress toward the year's ambitions.</p>
           </div>
 
-          {/* Big year countdown */}
-          <YearCountdown />
 
           {/* Year metrics */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 'var(--space-4)' }}>
