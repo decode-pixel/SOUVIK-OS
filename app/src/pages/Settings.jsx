@@ -385,7 +385,6 @@ export default function Settings() {
                   <button 
                     type="button" 
                     className="btn-icon" 
-                    style={{ width: '34px', height: '34px' }}
                     onClick={() => deleteHabit(habit.id)}
                     title="Delete Habit"
                   >
@@ -479,7 +478,6 @@ export default function Settings() {
                 <button 
                   type="button" 
                   className="btn-icon" 
-                  style={{ width: '34px', height: '34px' }}
                   onClick={() => deleteFinanceCategory(cat.id)}
                   title="Delete Category"
                 >

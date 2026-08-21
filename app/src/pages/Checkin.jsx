@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { today, addDays } from '../lib/date';
 import { CheckCircle2, ChevronLeft, ChevronRight, Sparkles, Moon, Activity, Flame, Award, Calendar } from 'lucide-react';
-
+import { calculateStreaks, getCompletedDates } from '../utils/streakUtils';
 const DEFAULT_HABITS = [
   { name: 'Reading / Learning (30m)', type: 'boolean', category: 'good_habit', sort_order: 1 },
   { name: 'Meditation / Mindfulness', type: 'boolean', category: 'good_habit', sort_order: 2 },
@@ -23,9 +23,10 @@ export default function Checkin() {
   const isToday = selectedDate === todayStr;
 
   const [loading, setLoading] = useState(true);
+  const [habits, setHabits] = useState([]);
+  const [allHabitLogs, setAllHabitLogs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
-  const [habits, setHabits] = useState([]);
 
   const [sleepHours, setSleepHours] = useState(7);
   const [exercise, setExercise] = useState(false);
@@ -57,9 +58,12 @@ export default function Checkin() {
         .from('daily_checkins').select('*').eq('user_id', user.id).eq('date', date).maybeSingle();
       if (checkinErr) throw checkinErr;
 
-      const { data: existingHabitLogs, error: logsErr } = await supabase
-        .from('habit_logs').select('*').eq('user_id', user.id).eq('date', date);
+      const { data: allLogs, error: logsErr } = await supabase
+        .from('habit_logs').select('habit_id, date, value_bool, value_count').eq('user_id', user.id);
       if (logsErr) throw logsErr;
+      
+      setAllHabitLogs(allLogs || []);
+      const existingHabitLogs = (allLogs || []).filter(l => l.date === date);
 
       const initialHabitValues = {};
       (userHabits || []).forEach(h => {
@@ -197,7 +201,7 @@ export default function Checkin() {
 
         {/* Date Nav */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', flexShrink: 0 }}>
-          <button type="button" className="btn-icon" onClick={() => shiftDate(-1)} title="Previous Day" style={{ width: '34px', height: '34px' }}>
+          <button type="button" className="btn-icon" onClick={() => shiftDate(-1)} title="Previous Day">
             <ChevronLeft size={18} />
           </button>
           <div style={{
@@ -208,7 +212,7 @@ export default function Checkin() {
             <Calendar size={13} color="var(--text-muted)" />
             {isToday ? 'Today' : selectedDate}
           </div>
-          <button type="button" className="btn-icon" onClick={() => shiftDate(1)} disabled={isToday} title="Next Day" style={{ width: '34px', height: '34px' }}>
+          <button type="button" className="btn-icon" onClick={() => shiftDate(1)} disabled={isToday} title="Next Day">
             <ChevronRight size={18} />
           </button>
         </div>
@@ -338,7 +342,11 @@ export default function Checkin() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              {enabledGoodHabits.map((habit) => (
+              {enabledGoodHabits.map((habit) => {
+                const completedDates = getCompletedDates(allHabitLogs, habit.id, habit.type);
+                const { currentStreak } = calculateStreaks(completedDates);
+                
+                return (
                 <div key={habit.id} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: 'var(--space-3) var(--space-4)',
@@ -347,7 +355,14 @@ export default function Checkin() {
                   border: '1px solid var(--border-subtle)',
                   transition: 'all var(--transition-fast)',
                 }}>
-                  <span style={{ fontWeight: 500, fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)' }}>{habit.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                    <span style={{ fontWeight: 500, fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)' }}>{habit.name}</span>
+                    {currentStreak >= 2 && (
+                      <span className="badge" style={{ backgroundColor: 'var(--color-warning-muted)', color: 'var(--color-warning)' }}>
+                        <Flame size={12} style={{ marginRight: '2px' }} /> {currentStreak}
+                      </span>
+                    )}
+                  </div>
                   {habit.type === 'boolean' ? (
                     <label className="toggle-wrapper" style={{ margin: 0, gap: 0 }}>
                       <div className="toggle">
@@ -368,7 +383,8 @@ export default function Checkin() {
                     </div>
                   )}
                 </div>
-              ))}
+              );
+            })}
             </div>
           </div>
         )}

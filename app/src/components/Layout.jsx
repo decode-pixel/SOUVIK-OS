@@ -226,7 +226,7 @@ export default function Layout() {
               className="btn-icon"
               onClick={toggleTheme}
               aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              style={{ position: 'relative', overflow: 'hidden', width: '36px', height: '36px' }}
+              style={{ position: 'relative', overflow: 'hidden' }}
             >
               <div style={{
                 position: 'absolute', display: 'flex', alignItems: 'center', justifyContent: 'center',

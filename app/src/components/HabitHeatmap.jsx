@@ -1,17 +1,26 @@
 import React, { useMemo } from 'react';
 import { getMonthDays, getTodayStr } from '../utils/dateUtils';
 
+import { Flame, Trophy } from 'lucide-react';
+import { calculateStreaks, getCompletedDates } from '../utils/streakUtils';
+
 /**
  * HabitHeatmap — Shows a month grid for a single habit.
  * Props:
  *   habit: { id, name, type, category }
- *   logs: array of { habit_id, date, value_bool, value_count }
+ *   logs: array of { habit_id, date, value_bool, value_count } (current month)
+ *   allTimeLogs: array of { habit_id, date, value_bool, value_count } (all time, for streaks)
  *   year: number
  *   month: number (0-indexed)
  */
-export default function HabitHeatmap({ habit, logs, year, month }) {
+export default function HabitHeatmap({ habit, logs, allTimeLogs = [], year, month }) {
   const today = getTodayStr();
   const monthDays = useMemo(() => getMonthDays(year, month), [year, month]);
+
+  const { currentStreak, longestStreak } = useMemo(() => {
+    if (!allTimeLogs.length) return { currentStreak: 0, longestStreak: 0 };
+    return calculateStreaks(getCompletedDates(allTimeLogs, habit.id, habit.type));
+  }, [allTimeLogs, habit.id, habit.type]);
 
   // Build lookup: date → log
   const logByDate = useMemo(() => {
@@ -43,9 +52,25 @@ export default function HabitHeatmap({ habit, logs, year, month }) {
     <div style={{ marginBottom: 'var(--space-5)' }}>
       {/* Habit name row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
-        <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>
-          {habit.name}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>
+            {habit.name}
+          </span>
+          {habit.category === 'good_habit' && longestStreak > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--font-size-xs)' }}>
+              {currentStreak >= 2 && (
+                <span className="badge" style={{ backgroundColor: 'var(--color-warning-muted)', color: 'var(--color-warning)' }}>
+                  <Flame size={12} style={{ marginRight: '2px' }} /> {currentStreak}
+                </span>
+              )}
+              {longestStreak >= 5 && (
+                <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '2px' }} title={`Best Streak: ${longestStreak}`}>
+                  <Trophy size={11} /> {longestStreak}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
           <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
             {doneDays}/{trackedDays} days

@@ -254,7 +254,7 @@ export default function Home() {
             </div>
           </div>
           {!isCheckinDone && (
-            <div className="btn btn-primary" style={{ pointerEvents: 'none', padding: '0 var(--space-4)', minHeight: '36px', fontSize: 'var(--font-size-sm)' }}>
+            <div className="btn btn-primary" style={{ pointerEvents: 'none', padding: '0 var(--space-4)', fontSize: 'var(--font-size-sm)' }}>
               Start →
             </div>
           )}

@@ -89,6 +89,7 @@ export default function Review() {
   const [checkins, setCheckins]       = useState([]);
   const [habits, setHabits]           = useState([]);
   const [habitLogs, setHabitLogs]     = useState([]);
+  const [allHabitLogs, setAllHabitLogs] = useState([]);
   const [tasks, setTasks]             = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [yearlyGoals, setYearlyGoals] = useState([]);
@@ -132,6 +133,7 @@ export default function Review() {
         { data: weekCheckins },
         { data: weekLogs },
         { data: weekTasks },
+        { data: allLogsData },
       ] = await Promise.all([
         supabase.from('daily_checkins').select('date, sleep_hours, exercise, achievement_text, notes').eq('user_id', user.id).gte('date', monthStart).lte('date', monthEnd).order('date'),
         supabase.from('habits').select('id, name, category, type, sort_order').eq('user_id', user.id).eq('enabled', true).order('sort_order'),
@@ -145,11 +147,13 @@ export default function Review() {
         supabase.from('daily_checkins').select('date, sleep_hours, exercise').eq('user_id', user.id).gte('date', weekStartStr).lte('date', weekEndStr),
         supabase.from('habit_logs').select('habit_id, date, value_bool, value_count').eq('user_id', user.id).gte('date', weekStartStr).lte('date', weekEndStr),
         supabase.from('tasks').select('id, status, title').eq('user_id', user.id).gte('date', weekStartStr).lte('date', weekEndStr),
+        supabase.from('habit_logs').select('habit_id, date, value_bool, value_count').eq('user_id', user.id),
       ]);
 
       setCheckins(checkinData || []);
       setHabits(habitsData || []);
       setHabitLogs(logsData || []);
+      setAllHabitLogs(allLogsData || []);
       setTasks(tasksData || []);
       setTransactions(txData || []);
       setYearlyGoals((goals || []).filter(g => g.timeframe === 'Yearly' || g.timeframe === 'Long-term'));
@@ -457,6 +461,7 @@ export default function Review() {
                     key={habit.id}
                     habit={habit}
                     logs={habitLogs}
+                    allTimeLogs={allHabitLogs}
                     year={selectedYear}
                     month={selectedMonth}
                   />
@@ -472,6 +477,7 @@ export default function Review() {
                       key={habit.id}
                       habit={habit}
                       logs={habitLogs}
+                      allTimeLogs={allHabitLogs}
                       year={selectedYear}
                       month={selectedMonth}
                     />
